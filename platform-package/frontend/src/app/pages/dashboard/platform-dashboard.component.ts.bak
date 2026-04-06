@@ -1,0 +1,269 @@
+import { Component, inject, signal, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { HealthService, HealthResponse, WorkflowHealthResponse } from '../../core/dos/services/health.service';
+
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  selector: 'dos-platform-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterLink, CardModule, ButtonModule, TagModule, ProgressBarModule, PageHeaderComponent],
+  template: `
+    <dos-page-header title="Platform Dashboard" subtitle="DOS Platform R1.5 — System Overview" />
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-icon" [class]="statusClass()">
+          <i class="pi pi-circle-fill"></i>
+        </div>
+        <div class="metric-body">
+          <span class="metric-label">Platform Status</span>
+          <span class="metric-value">{{ health()?.status || 'Loading...' }}</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon blue"><i class="pi pi-tag"></i></div>
+        <div class="metric-body">
+          <span class="metric-label">Version</span>
+          <span class="metric-value">{{ health()?.version || '--' }}</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon purple"><i class="pi pi-clock"></i></div>
+        <div class="metric-body">
+          <span class="metric-label">Uptime</span>
+          <span class="metric-value">{{ formatUptime(health()?.uptime) }}</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon orange"><i class="pi pi-microchip"></i></div>
+        <div class="metric-body">
+          <span class="metric-label">Heap Memory</span>
+          <span class="metric-value">{{ health()?.memory?.heapUsedMB || 0 }} / {{ health()?.memory?.heapTotalMB || 0 }} MB</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon teal"><i class="pi pi-database"></i></div>
+        <div class="metric-body">
+          <span class="metric-label">RSS Memory</span>
+          <span class="metric-value">{{ health()?.memory?.rssMB || 0 }} MB</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-row">
+      <div class="section-block">
+        <h3>Infrastructure Probes</h3>
+        <div class="probe-grid">
+          @for (probe of probes(); track probe.name) {
+            <div class="probe-item">
+              <span class="probe-dot" [class]="probeClass(probe.status)"></span>
+              <span class="probe-name">{{ probe.name }}</span>
+              @if (probe.latency !== undefined) {
+                <span class="probe-latency">{{ probe.latency }}ms</span>
+              }
+              <span class="probe-status">{{ probe.status }}</span>
+            </div>
+          }
+          @if (probes().length === 0) {
+            <div class="probe-empty">Loading probes...</div>
+          }
+        </div>
+      </div>
+      <div class="section-block">
+        <h3>Workflow Engine</h3>
+        @if (workflow()) {
+          <div class="wf-stats">
+            <div class="wf-stat">
+              <span class="wf-val">{{ workflow()!.activeExecutions }}</span>
+              <span class="wf-label">Active</span>
+            </div>
+            <div class="wf-stat">
+              <span class="wf-val">{{ workflow()!.pendingSteps }}</span>
+              <span class="wf-label">Pending Steps</span>
+            </div>
+            <div class="wf-stat" [class.wf-danger]="(workflow()!.dlqCount || 0) > 0">
+              <span class="wf-val">{{ workflow()!.dlqCount }}</span>
+              <span class="wf-label">DLQ</span>
+            </div>
+          </div>
+        } @else {
+          <div class="probe-empty">Loading workflow stats...</div>
+        }
+      </div>
+    </div>
+
+    <div class="quick-nav">
+      <h3>Quick Navigation</h3>
+      <div class="nav-cards">
+        <a routerLink="/health" class="nav-card">
+          <i class="pi pi-heart"></i>
+          <span>Health Dashboard</span>
+        </a>
+        <a routerLink="/tenants" class="nav-card">
+          <i class="pi pi-building"></i>
+          <span>Tenant Management</span>
+        </a>
+        <a routerLink="/users" class="nav-card">
+          <i class="pi pi-users"></i>
+          <span>User Management</span>
+        </a>
+        <a routerLink="/settings" class="nav-card">
+          <i class="pi pi-cog"></i>
+          <span>Platform Settings</span>
+        </a>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .metrics-row {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px; margin-top: 20px;
+    }
+    .metric-card {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--dos-surface); border: 1px solid var(--dos-border);
+      border-radius: var(--dos-radius); padding: 20px;
+      box-shadow: var(--dos-shadow);
+    }
+    .metric-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .metric-icon.green { background: #dcfce7; color: #16a34a; }
+    .metric-icon.red { background: #fef2f2; color: #dc2626; }
+    .metric-icon.yellow { background: #fefce8; color: #ca8a04; }
+    .metric-icon.blue { background: #dbeafe; color: #2563eb; }
+    .metric-icon.purple { background: #f3e8ff; color: #9333ea; }
+    .metric-icon.orange { background: #fff7ed; color: #ea580c; }
+    .metric-icon.teal { background: #ccfbf1; color: #0d9488; }
+    .metric-label { font-size: 12px; font-weight: 600; color: var(--dos-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .metric-value { font-size: 18px; font-weight: 700; color: var(--dos-text); }
+    .metric-body { display: flex; flex-direction: column; gap: 2px; }
+
+    .section-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+    .section-block {
+      background: var(--dos-surface); border: 1px solid var(--dos-border);
+      border-radius: var(--dos-radius); padding: 20px;
+      box-shadow: var(--dos-shadow);
+    }
+    .section-block h3 { font-size: 15px; font-weight: 700; margin: 0 0 16px; color: var(--dos-text); }
+
+    .probe-grid { display: flex; flex-direction: column; gap: 10px; }
+    .probe-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: var(--dos-bg); border-radius: 6px;
+    }
+    .probe-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .probe-dot.ok { background: #16a34a; }
+    .probe-dot.warn { background: #ca8a04; }
+    .probe-dot.fail { background: #dc2626; }
+    .probe-name { font-size: 13px; font-weight: 600; flex: 1; }
+    .probe-latency { font-size: 12px; color: var(--dos-text-muted); }
+    .probe-status { font-size: 12px; font-weight: 600; text-transform: uppercase; }
+    .probe-empty { font-size: 13px; color: var(--dos-text-muted); padding: 12px 0; }
+
+    .wf-stats { display: flex; gap: 24px; }
+    .wf-stat { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; padding: 16px; background: var(--dos-bg); border-radius: 8px; }
+    .wf-val { font-size: 28px; font-weight: 800; color: var(--dos-text); }
+    .wf-label { font-size: 12px; font-weight: 600; color: var(--dos-text-muted); text-transform: uppercase; }
+    .wf-danger .wf-val { color: #dc2626; }
+
+    .quick-nav { margin-top: 24px; }
+    .quick-nav h3 { font-size: 15px; font-weight: 700; margin: 0 0 12px; color: var(--dos-text); }
+    .nav-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .nav-card {
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      padding: 24px 16px; background: var(--dos-surface); border: 1px solid var(--dos-border);
+      border-radius: var(--dos-radius); text-decoration: none; color: var(--dos-text);
+      transition: border-color 0.15s, box-shadow 0.15s; cursor: pointer;
+    }
+    .nav-card:hover { border-color: var(--dos-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .nav-card i { font-size: 24px; color: var(--dos-primary); }
+    .nav-card span { font-size: 13px; font-weight: 600; }
+
+    @media (max-width: 900px) {
+      .section-row { grid-template-columns: 1fr; }
+      .nav-cards { grid-template-columns: repeat(2, 1fr); }
+    }
+  `],
+})
+export class PlatformDashboardComponent implements OnInit, OnDestroy {
+  private healthSvc = inject(HealthService);
+  private refreshTimer: any;
+
+  health = signal<HealthResponse | null>(null);
+  probes = signal<Array<{ name: string; status: string; latency?: number }>>([]);
+  workflow = signal<WorkflowHealthResponse | null>(null);
+
+  ngOnInit(): void {
+    this.loadAll();
+    this.refreshTimer = setInterval(() => this.loadAll(), 30_000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.refreshTimer) clearInterval(this.refreshTimer);
+  }
+
+  statusClass(): string {
+    const s = this.health()?.status;
+    if (s === 'ok' || s === 'healthy') return 'green';
+    if (s === 'degraded') return 'yellow';
+    return 'red';
+  }
+
+  probeClass(status: string): string {
+    if (status === 'healthy' || status === 'ok') return 'ok';
+    if (status === 'degraded') return 'warn';
+    return 'fail';
+  }
+
+  formatUptime(seconds?: number): string {
+    if (!seconds) return '--';
+    const d = Math.floor(seconds / 86400);
+    const h = Math.floor((seconds % 86400) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (d > 0) return `${d}d ${h}h ${m}m`;
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  }
+
+  private loadAll(): void {
+    this.healthSvc.getHealth().subscribe({
+      next: (data) => this.health.set(data),
+      error: () => this.health.set({ status: 'unreachable', version: '--', uptime: 0, timestamp: '', memory: { heapUsedMB: 0, heapTotalMB: 0, rssMB: 0 } }),
+    });
+
+    this.healthSvc.getDeepHealth().subscribe({
+      next: (data) => {
+        const items = Object.entries(data.checks || {}).map(([name, check]) => ({
+          name: this.formatProbeName(name),
+          status: check.status,
+          latency: check.latency_ms,
+        }));
+        this.probes.set(items);
+      },
+      error: () => {
+        this.probes.set([
+          { name: 'API Server', status: 'healthy' },
+          { name: 'Database', status: 'unknown' },
+          { name: 'Redis', status: 'unknown' },
+        ]);
+      },
+    });
+
+    this.healthSvc.getWorkflowHealth().subscribe({
+      next: (data) => this.workflow.set(data),
+      error: () => this.workflow.set({ status: 'unavailable', activeExecutions: 0, pendingSteps: 0, dlqCount: 0 }),
+    });
+  }
+
+  private formatProbeName(key: string): string {
+    return key.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+}

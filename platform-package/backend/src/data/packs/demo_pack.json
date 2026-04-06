@@ -1,0 +1,186 @@
+{
+  "packId": "demo_pack",
+  "pack_key": "demo_pack",
+  "pack_name": "Demo Pack",
+  "version": "1.0.0",
+  "pack_type": "subscription_tier",
+  "description": "Full-module sandbox with sample data for live demos and evaluations",
+  "dependencies": ["shared_base_pack", "agrc_base_pack", "qiyas_base_pack"],
+  "compatibility": {
+    "min_platform_version": "1.0.0",
+    "required_modules": ["agrc"]
+  },
+  "frameworkRefs": ["NCA-ECC", "SAMA-CSF", "PDPL", "ISO-27001"],
+  "artifacts": {
+    "controls": [],
+    "mappings": [],
+    "testProcedures": [],
+    "evidenceTemplates": []
+  },
+  "metadata": {
+    "publisher": "Shahin-AI",
+    "publishedAt": "2026-03-01",
+    "changelog": "Demo pack — full module access with sample data for guided demonstrations",
+    "minPlatformVersion": "1.0.0",
+    "description_en": "Pre-configured sandbox environment with sample data across all modules for live demos and evaluations",
+    "description_ar": "بيئة تجريبية مُعدّة مسبقًا مع بيانات نموذجية عبر جميع الوحدات للعروض التوضيحية والتقييمات"
+  },
+  "content_pack_refs": ["nca_ecc_pack", "sama_csf_pack", "pdpl_pack", "iso27001_pack", "qiyas_maturity_pack"],
+  "limits_overrides": {
+    "max_users": 50,
+    "max_frameworks": 20,
+    "max_assessments": 100,
+    "max_connectors": 10
+  },
+  "modules": {
+    "agrc": true,
+    "qiyas": true,
+    "dataGovernance": true,
+    "privacyOps": true,
+    "vendorGovernance": true,
+    "projectGovernance": false,
+    "connectorCenter": true,
+    "aiCopilot": true,
+    "digitalTwin": true
+  },
+  "role_pack": {
+    "roles": [
+      { "code": "admin", "name_en": "Admin", "name_ar": "مدير", "home_route": "/workspace-home", "permissions": ["*"] },
+      { "code": "compliance_lead", "name_en": "Compliance Lead", "name_ar": "قائد الامتثال", "home_route": "/workspace-home", "permissions": ["compliance:*", "controls:*", "evidence:*"] },
+      { "code": "risk_lead", "name_en": "Risk Lead", "name_ar": "قائد المخاطر", "home_route": "/workspace-home", "permissions": ["risks:*", "controls:read"] },
+      { "code": "auditor", "name_en": "Auditor", "name_ar": "مدقق", "home_route": "/workspace-home", "permissions": ["audit:*", "controls:read", "evidence:read"] },
+      { "code": "privacy_officer", "name_en": "Privacy Officer", "name_ar": "مسؤول الخصوصية", "home_route": "/workspace-home", "permissions": ["privacy:*", "dpia:*", "consent:*"] },
+      { "code": "vendor_manager", "name_en": "Vendor Manager", "name_ar": "مدير الموردين", "home_route": "/workspace-home", "permissions": ["vendors:*", "contracts:*"] },
+      { "code": "viewer", "name_en": "Viewer", "name_ar": "مشاهد", "home_route": "/workspace-home", "permissions": ["analytics:read"] }
+    ]
+  },
+  "dashboard_pack": {
+    "layouts": [
+      {
+        "code": "demo_executive",
+        "name_en": "Executive Overview (Demo)",
+        "name_ar": "نظرة تنفيذية (تجريبي)",
+        "role_code": "admin",
+        "config": {
+          "widgets": ["compliance_score", "risk_heatmap", "overdue_tasks", "open_findings", "evidence_freshness", "audit_readiness", "vendor_risk_summary", "privacy_posture"]
+        }
+      },
+      {
+        "code": "demo_compliance",
+        "name_en": "Compliance Dashboard (Demo)",
+        "name_ar": "لوحة الامتثال (تجريبي)",
+        "role_code": "compliance_lead",
+        "config": {
+          "widgets": ["compliance_score", "controls_coverage", "evidence_freshness", "overdue_tasks", "framework_progress"]
+        }
+      },
+      {
+        "code": "demo_risk",
+        "name_en": "Risk Dashboard (Demo)",
+        "name_ar": "لوحة المخاطر (تجريبي)",
+        "role_code": "risk_lead",
+        "config": {
+          "widgets": ["risk_heatmap", "top_risks", "risk_appetite_breaches", "treatment_completion", "kri_trends"]
+        }
+      },
+      {
+        "code": "demo_privacy",
+        "name_en": "Privacy Dashboard (Demo)",
+        "name_ar": "لوحة الخصوصية (تجريبي)",
+        "role_code": "privacy_officer",
+        "config": {
+          "widgets": ["dpia_status", "consent_coverage", "data_inventory", "breach_tracker"]
+        }
+      }
+    ]
+  },
+  "workflow_pack": {
+    "templates": [
+      {
+        "code": "demo_policy_approval",
+        "name_en": "Policy Approval (Demo)",
+        "name_ar": "اعتماد السياسة (تجريبي)",
+        "trigger_type": "manual",
+        "steps": [
+          { "step_code": "draft", "step_name": "Draft Policy", "assignee_role": "compliance_lead" },
+          { "step_code": "review", "step_name": "Review", "assignee_role": "admin" },
+          { "step_code": "approve", "step_name": "Approve", "assignee_role": "admin" }
+        ]
+      },
+      {
+        "code": "demo_risk_assessment",
+        "name_en": "Risk Assessment (Demo)",
+        "name_ar": "تقييم المخاطر (تجريبي)",
+        "trigger_type": "manual",
+        "steps": [
+          { "step_code": "identify", "step_name": "Identify Risks", "assignee_role": "risk_lead" },
+          { "step_code": "assess", "step_name": "Assess Impact", "assignee_role": "risk_lead" },
+          { "step_code": "treat", "step_name": "Define Treatment", "assignee_role": "risk_lead" },
+          { "step_code": "approve", "step_name": "Approve Treatment", "assignee_role": "admin" }
+        ]
+      },
+      {
+        "code": "demo_dpia",
+        "name_en": "DPIA Workflow (Demo)",
+        "name_ar": "سير عمل تقييم الأثر (تجريبي)",
+        "trigger_type": "manual",
+        "steps": [
+          { "step_code": "initiate", "step_name": "Initiate DPIA", "assignee_role": "privacy_officer" },
+          { "step_code": "assess", "step_name": "Assess Impact", "assignee_role": "privacy_officer" },
+          { "step_code": "mitigate", "step_name": "Apply Mitigations", "assignee_role": "privacy_officer" },
+          { "step_code": "approve", "step_name": "Approve", "assignee_role": "admin" }
+        ]
+      },
+      {
+        "code": "demo_vendor_onboarding",
+        "name_en": "Vendor Onboarding (Demo)",
+        "name_ar": "إعداد المورد (تجريبي)",
+        "trigger_type": "manual",
+        "steps": [
+          { "step_code": "request", "step_name": "Submit Vendor Request", "assignee_role": "vendor_manager" },
+          { "step_code": "due_diligence", "step_name": "Due Diligence", "assignee_role": "vendor_manager" },
+          { "step_code": "risk_assess", "step_name": "Risk Assessment", "assignee_role": "risk_lead" },
+          { "step_code": "approve", "step_name": "Approve Vendor", "assignee_role": "admin" }
+        ]
+      },
+      {
+        "code": "demo_evidence_collection",
+        "name_en": "Evidence Collection (Demo)",
+        "name_ar": "جمع الأدلة (تجريبي)",
+        "trigger_type": "scheduled",
+        "steps": [
+          { "step_code": "collect", "step_name": "Collect Evidence", "assignee_role": "compliance_lead" },
+          { "step_code": "review", "step_name": "Review Evidence", "assignee_role": "auditor" },
+          { "step_code": "archive", "step_name": "Archive", "assignee_role": "admin" }
+        ]
+      }
+    ]
+  },
+  "seed_payload": {
+    "sample_frameworks": ["NCA-ECC", "SAMA-CSF", "PDPL", "ISO-27001"],
+    "sample_risks": 15,
+    "sample_controls": 30,
+    "sample_policies": 10,
+    "sample_evidence_items": 20,
+    "sample_vendors": 5,
+    "sample_dpias": 2,
+    "demo_expiry_days": 30
+  },
+  "feature_flags": {
+    "ai_copilot": true,
+    "digital_twin": true,
+    "advanced_connectors": true,
+    "cross_framework_mapping": true,
+    "report_center": true,
+    "qiyas_benchmarks": true,
+    "executive_dashboards": true,
+    "workflow_automation": true
+  },
+  "limits": {
+    "max_users": 50,
+    "max_frameworks": 20,
+    "max_assessments": 100,
+    "max_risks": 500,
+    "max_connectors": 10
+  }
+}

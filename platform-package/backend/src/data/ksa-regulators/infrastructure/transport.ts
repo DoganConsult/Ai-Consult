@@ -1,0 +1,88 @@
+// ============================================
+// TRANSPORT & LOGISTICS (8)
+// ============================================
+
+import { RegulatorDef } from "../ksa-frameworks";
+
+export const REGS_TRANSPORT: RegulatorDef[] = [
+  {
+    regulatorId: "REG-KSA-GACA",
+    nameEn: "General Authority of Civil Aviation",
+    nameAr: "الهيئة العامة للطيران المدني",
+    acronym: "GACA",
+    category: "transport",
+    website: "https://gaca.gov.sa",
+    mandateNote: "Aviation and airport cybersecurity regulation",
+    sectors: ["SEC-KSA-TRANS-AVIA"],
+  },
+  {
+    regulatorId: "REG-KSA-MAWANI",
+    nameEn: "Saudi Ports Authority (Mawani)",
+    nameAr: "الهيئة العامة للموانئ (موانئ)",
+    acronym: "MAWANI",
+    category: "transport",
+    website: "https://mawani.gov.sa",
+    mandateNote: "Port security, maritime cybersecurity, and cargo systems compliance",
+    sectors: ["SEC-KSA-TRANS-MARI"],
+  },
+  {
+    regulatorId: "REG-KSA-TGA",
+    nameEn: "Transport General Authority",
+    nameAr: "الهيئة العامة للنقل",
+    acronym: "TGA",
+    category: "transport",
+    website: "https://tga.gov.sa",
+    mandateNote: "Land transport regulation, fleet management, and logistics compliance",
+    sectors: ["SEC-KSA-TRANS-LOG", "SEC-KSA-TRANS-RAIL"],
+  },
+  {
+    regulatorId: "REG-KSA-SAR",
+    nameEn: "Saudi Arabia Railways",
+    nameAr: "الخطوط الحديدية السعودية",
+    acronym: "SAR",
+    category: "transport",
+    website: "https://sar.com.sa",
+    mandateNote: "Railway OT/ICS cybersecurity and signaling systems compliance",
+    sectors: ["SEC-KSA-TRANS-RAIL"],
+  },
+  {
+    regulatorId: "REG-KSA-MOTL",
+    nameEn: "Ministry of Transport & Logistics",
+    nameAr: "وزارة النقل والخدمات اللوجستية",
+    acronym: "MOTL",
+    category: "transport",
+    website: "https://mot.gov.sa",
+    mandateNote: "National transport policy, logistics hub development, and smart mobility",
+    sectors: ["SEC-KSA-TRANS-AVIA", "SEC-KSA-TRANS-MARI", "SEC-KSA-TRANS-RAIL", "SEC-KSA-TRANS-LOG"],
+  },
+  {
+    regulatorId: "REG-KSA-SAPTCO",
+    nameEn: "Saudi Arabian Public Transport Company",
+    nameAr: "الشركة السعودية للنقل الجماعي",
+    acronym: "SAPTCO",
+    category: "transport",
+    website: "https://saptco.com.sa",
+    mandateNote: "Public transport fleet IT systems and passenger data protection",
+    sectors: ["SEC-KSA-TRANS-LOG"],
+  },
+  {
+    regulatorId: "REG-KSA-RDA",
+    nameEn: "Royal Commission for AlUla",
+    nameAr: "الهيئة الملكية لمحافظة العلا",
+    acronym: "RDA",
+    category: "transport",
+    website: "https://rcu.gov.sa",
+    mandateNote: "AlUla heritage tourism smart infrastructure and cybersecurity",
+    sectors: ["SEC-KSA-TOURISM", "SEC-KSA-SPECIAL-ZONES"],
+  },
+  {
+    regulatorId: "REG-KSA-DRONES",
+    nameEn: "General Authority for Unmanned Aerial Systems",
+    nameAr: "الهيئة العامة للأنظمة الجوية غير المأهولة",
+    acronym: "DRONES",
+    category: "transport",
+    website: "https://gaca.gov.sa",
+    mandateNote: "Drone registration, airspace cybersecurity, and telemetry standards",
+    sectors: ["SEC-KSA-TRANS-AVIA"],
+  },
+];

@@ -1,0 +1,71 @@
+{
+  "packId": "trial_pack",
+  "pack_key": "trial_pack",
+  "pack_name": "Trial Pack",
+  "version": "1.0.0",
+  "pack_type": "subscription_tier",
+  "description": "Limited feature set for 14-day trial tenants — AGRC core only with basic dashboards",
+  "dependencies": ["shared_base_pack", "agrc_base_pack"],
+  "compatibility": {
+    "min_platform_version": "1.0.0",
+    "required_modules": ["agrc"]
+  },
+  "frameworkRefs": ["NCA-ECC"],
+  "artifacts": {
+    "controls": [],
+    "mappings": [],
+    "testProcedures": [],
+    "evidenceTemplates": []
+  },
+  "metadata": {
+    "publisher": "Shahin-AI",
+    "publishedAt": "2026-03-01",
+    "changelog": "Trial pack — limited feature set for 14-day trial tenants",
+    "minPlatformVersion": "1.0.0"
+  },
+  "modules": {
+    "agrc": true,
+    "qiyas": false,
+    "dataGovernance": false,
+    "privacyOps": false,
+    "vendorGovernance": false,
+    "projectGovernance": false,
+    "connectorCenter": false,
+    "aiCopilot": false
+  },
+  "feature_flags": {
+    "enable_risk_scoring_advanced": false,
+    "enable_cross_framework_mapping": false,
+    "enable_workflow_designer": false
+  },
+  "limits_overrides": {
+    "max_users": 5,
+    "max_frameworks": 3,
+    "max_assessments": 10,
+    "max_connectors": 0
+  },
+  "role_pack": {
+    "seed_roles": ["admin", "compliance_lead", "viewer"],
+    "default_assignments": []
+  },
+  "dashboard_pack": {
+    "layouts": ["admin_overview"],
+    "default_home_by_role": {
+      "admin": "/workspace-home"
+    }
+  },
+  "workflow_pack": {
+    "templates": ["policy_approval", "evidence_collection"]
+  },
+  "content_pack_refs": ["nca_ecc_pack"],
+  "seed_payload": {
+    "workspace_profile": {
+      "default_dashboard": "admin_overview",
+      "enforcement_mode": "advisory"
+    },
+    "default_workspaces": [
+      { "name": "Trial Workspace", "type": "core" }
+    ],
+    "trial_expiry_days": 14
+  }
+}

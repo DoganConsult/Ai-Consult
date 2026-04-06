@@ -1,0 +1,139 @@
+pipeline:
+  name: "Onboarding Submit → Workspace Autocreation"
+  version: "1.0.0"
+  updated_at_utc: "2026-02-23T00:00:00Z"
+  idempotency:
+    key: "sha256(canonical_answers_json) + tenantId"
+    behavior: "Repeated submits return same ProvisioningJob and do not duplicate artifacts."
+
+  progress_contract:
+    statuses: [PENDING, RUNNING, DONE, FAILED, SKIPPED]
+    events:
+      - "ProvisioningStarted"
+      - "StageStarted"
+      - "StageProgress"
+      - "StageCompleted"
+      - "ProvisioningCompleted"
+      - "ProvisioningFailed"
+    transport:
+      primary: "SignalR (recommended)"
+      fallback: "Polling GET /api/onboarding/provisioning/jobs/{jobId} (authenticate)"
+
+  stages:
+
+    - stage: 1_validate_and_lock
+      purpose: "Freeze answers, prevent double-submit, guarantee deterministic output."
+      inputs: [sessionId, answersPayload]
+      actions:
+        - compute answersHash = sha256(canonical_json(answersPayload))
+        - acquire distributed_lock(tenantId, answersHash)
+        - validate enums/ranges/no-free-text rules
+        - write immutable snapshot: AnswersSnapshot, SignalSnapshot (empty for now)
+      user_ui:
+        title: "Validating answers"
+        shows:
+          - "Schema version"
+          - "Rules version"
+          - "Idempotency: enabled"
+
+    - stage: 2_normalize_to_signals
+      purpose: "Transform answers into stable, auditable signals."
+      actions:
+        - apply QuestionSignalMapping to emit normalized signals
+        - persist SignalSnapshot with provenance (questionId, optionId)
+      user_ui:
+        title: "Building your compliance profile"
+        shows:
+          - "Signal map (optional drawer)"
+          - "Confidence meters (initial)"
+
+    - stage: 3_regulator_inference
+      purpose: "Infer applicable regulators without asking regulator names."
+      actions:
+        - apply SignalToRegulatorRule + RegulatorSectorMap
+        - compute regulator confidence + reasons
+        - persist DecisionTrace(REGULATOR_APPLY)
+      user_ui:
+        title: "Determining regulators"
+        shows:
+          - "Plain-language summary + optional 'View details'"
+          - "Confidence bars"
+
+    - stage: 4_framework_inference_and_version_selection
+      purpose: "Select frameworks + correct versions based on effective dates."
+      actions:
+        - expand from regulators.framework_catalog + SignalToFrameworkRule
+        - select latest effective version (or 'as-of date' if provided)
+        - persist DecisionTrace(FRAMEWORK_SELECT)
+      user_ui:
+        title: "Selecting frameworks & versions"
+        shows:
+          - "Framework list (grouped by cyber/privacy/resilience)"
+          - "Effective dates"
+
+    - stage: 5_control_universe_compilation
+      purpose: "Compile applicable control universe (thousands → scoped set)."
+      actions:
+        - for each selected FrameworkVersion.control_set_id:
+            - evaluate ControlApplicabilityRule using signals
+            - state: Applicable/NotApplicable/ApplicableIfConfirmed
+        - if many ApplicableIfConfirmed:
+            - run NextQuestionPolicy loop (ask 1..N confirmation questions)
+        - persist scoped control list + explainability
+      user_ui:
+        title: "Compiling control scope"
+        shows:
+          - "Counts (total/applicable/excluded/conditional)"
+          - "Top domains/families"
+          - "Any assumptions requiring confirmation"
+
+    - stage: 6_evidence_plan_generation
+      purpose: "Generate evidence requirements + 90-day evidence tasks."
+      actions:
+        - map included controls → EvidenceRequirementTemplate
+        - apply EvidenceBaselineProfile overrides per sector/criticality
+        - create EvidenceTask instances for next 90 days
+      user_ui:
+        title: "Creating evidence plan"
+        shows:
+          - "Tasks created (90 days)"
+          - "First due items"
+          - "Automation opportunities (connectors)"
+
+    - stage: 7_provision_roles_modules_dashboards_workflows
+      purpose: "Create the operational workspace (RBAC, modules, dashboards, workflows)."
+      actions:
+        - create Tenant/Workspace if not already created
+        - enable modules based on recommended plan
+        - seed roles (RoleBlueprint) + assignments
+        - create dashboards from DashboardTemplate triggers
+        - create workflow templates/instances from WorkflowTemplate triggers
+      user_ui:
+        title: "Provisioning workspace"
+        shows:
+          - "Workspace created"
+          - "Roles created"
+          - "Dashboards created"
+          - "Workflows created"
+
+    - stage: 8_baseline_scoring_and_reports
+      purpose: "Create first baseline posture and starter reports."
+      actions:
+        - create ScoreRun (baseline) → mostly inconclusive until evidence arrives
+        - generate ReportRun: Exec one-pager + 30/60/90 plan + evidence calendar
+        - create AuditPackage placeholder (manifest + traceability skeleton)
+      user_ui:
+        title: "Generating baseline posture"
+        shows:
+          - "Executive baseline ready"
+          - "90-day plan ready"
+          - "Go to workspace overview"
+
+  finish:
+    route: "/workspace/:workspaceId/overview"
+    page_widgets:
+      - "Regulatory scope (explainable)"
+      - "Control posture baseline"
+      - "Next 7 days tasks"
+      - "90-day timeline"
+      - "Audit readiness gauge"

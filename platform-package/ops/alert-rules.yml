@@ -1,0 +1,87 @@
+groups:
+  - name: dos-platform-alerts
+    rules:
+      - alert: PlatformDown
+        expr: up{job="dos-platform"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "DOS Platform instance is down"
+          description: "{{ $labels.instance }} has been down for more than 1 minute."
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Error rate exceeds 5%"
+          description: "HTTP 5xx error rate is {{ $value | humanizePercentage }}."
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 latency exceeds 2s"
+          description: "95th percentile latency is {{ $value }}s."
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: pg_pool_available_connections == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection pool exhausted"
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis is unreachable"
+          description: "Platform will use in-memory fallback. Performance may degrade."
+
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes / 1024 / 1024 > 1024
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory usage exceeds 1GB"
+          description: "RSS is {{ $value | humanize }}MB."
+
+      - alert: EventLoopLag
+        expr: nodejs_eventloop_lag_seconds > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Event loop lag exceeds 500ms"
+
+      - alert: DiskSpaceLow
+        expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} < 0.1
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space below 10%"
+
+      - alert: TenantProvisioningFailure
+        expr: increase(tenant_provisioning_failures_total[1h]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Tenant provisioning failure detected"
+
+      - alert: MigrationDrift
+        expr: schema_drift_detected == 1
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Schema drift detected between expected and actual database state"

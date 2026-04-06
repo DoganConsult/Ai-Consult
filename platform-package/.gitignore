@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+logs/
+*.log
+.angular/
+.zenflow/
+.zencoder/
+pasted/
+pm2.log
+trace.log
+out*.log
+crash*.log

@@ -1,0 +1,80 @@
+{
+  "packId": "qiyas_base_pack",
+  "pack_key": "qiyas_base_pack",
+  "pack_name": "Qiyas Base Pack",
+  "version": "1.0.0",
+  "pack_type": "module_base",
+  "description": "Qiyas maturity assessment engine — models, scoring methods, benchmarking, and certification workflows",
+  "dependencies": ["shared_base_pack"],
+  "compatibility": {
+    "min_platform_version": "1.0.0",
+    "required_modules": ["qiyas"]
+  },
+  "frameworkRefs": [],
+  "artifacts": {
+    "controls": [],
+    "mappings": [],
+    "testProcedures": [],
+    "evidenceTemplates": []
+  },
+  "metadata": {
+    "publisher": "Shahin-AI",
+    "publishedAt": "2026-03-01",
+    "changelog": "Qiyas engine base pack — maturity models, scoring, benchmarking roles and dashboards",
+    "minPlatformVersion": "1.0.0"
+  },
+  "modules": {
+    "qiyas": true,
+    "qiyasBenchmarking": true,
+    "qiyasCertification": false
+  },
+  "feature_flags": {
+    "enable_qiyas": true,
+    "enable_qiyas_benchmarking": true,
+    "enable_qiyas_certification": false
+  },
+  "limits_overrides": {},
+  "content_pack_refs": ["qiyas_maturity_pack"],
+  "seed_payload": {
+    "workspace_profile": {
+      "default_dashboard": "qiyas_overview"
+    }
+  },
+  "role_pack": {
+    "roles": [
+      { "code": "assessment_lead", "name_en": "Assessment Lead", "name_ar": "قائد التقييم", "home_route": "/qiyas", "permissions": ["qiyas:*"] },
+      { "code": "respondent", "name_en": "Respondent", "name_ar": "مستجيب", "home_route": "/qiyas/assessments", "permissions": ["qiyas:respond"] },
+      { "code": "calibrator", "name_en": "Calibrator", "name_ar": "معاير", "home_route": "/qiyas", "permissions": ["qiyas:calibrate", "qiyas:read"] }
+    ]
+  },
+  "dashboard_pack": {
+    "layouts": [
+      {
+        "code": "qiyas_overview",
+        "name_en": "Qiyas Overview",
+        "name_ar": "نظرة عامة على قياس",
+        "role_code": "assessment_lead",
+        "config": {
+          "widgets": ["active_models", "total_assessments", "in_progress", "finalized", "recent_assessments", "maturity_trend"]
+        }
+      }
+    ]
+  },
+  "workflow_pack": {
+    "templates": [
+      {
+        "code": "maturity_assessment",
+        "name_en": "Maturity Assessment Cycle",
+        "name_ar": "دورة تقييم النضج",
+        "trigger_type": "manual",
+        "steps": [
+          { "step_code": "plan", "step_name": "Plan Assessment", "assignee_role": "assessment_lead" },
+          { "step_code": "assign", "step_name": "Assign Respondents", "assignee_role": "assessment_lead" },
+          { "step_code": "collect", "step_name": "Collect Responses", "assignee_role": "respondent" },
+          { "step_code": "calibrate", "step_name": "Calibrate Scores", "assignee_role": "calibrator" },
+          { "step_code": "finalize", "step_name": "Finalize & Report", "assignee_role": "assessment_lead" }
+        ]
+      }
+    ]
+  }
+}

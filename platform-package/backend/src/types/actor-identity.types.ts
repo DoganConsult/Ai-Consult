@@ -1,0 +1,21 @@
+export type ActorType = 'human' | 'agent' | 'service_account' | 'service' | 'external';
+export interface ActorIdentity { actorId: string; type?: ActorType; userId?: string; displayName?: string; displayNameAr?: string; email?: string; tenantId?: string;
+  actorType?: unknown;
+  [key: string]: unknown;
+}
+export type AuthorityType = any;
+export type CompetencyType = any;
+export type ProficiencyLevel = any;
+export type StakeholderType = any;
+export type AvailabilityStatus = any;
+export type ExternalStakeholderProfile = any;
+export type WorkloadSnapshot = any;
+export type WorkloadRecommendation = any;
+export type ModuleUserContext = any;
+export type UserAvailability = any;
+export type UserCompetency = any;
+export type AccessProfile = any;
+export type FunctionalRole = any;
+export type JobTitle = any;
+export type DecisionAuthority = any;
+export type DecisionOutcome = any;

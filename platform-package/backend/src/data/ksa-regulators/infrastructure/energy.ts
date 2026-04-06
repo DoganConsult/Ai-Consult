@@ -1,0 +1,88 @@
+// ============================================
+// ENERGY & UTILITIES (8)
+// ============================================
+
+import { RegulatorDef } from "../ksa-frameworks";
+
+export const REGS_ENERGY: RegulatorDef[] = [
+  {
+    regulatorId: "REG-KSA-ECRA",
+    nameEn: "Electricity & Cogeneration Regulatory Authority",
+    nameAr: "هيئة تنظيم الكهرباء والإنتاج المزدوج",
+    acronym: "ECRA",
+    category: "energy",
+    website: "https://ecra.gov.sa",
+    mandateNote: "Electricity sector regulation",
+    sectors: ["SEC-KSA-ENERGY-ELEC"],
+  },
+  {
+    regulatorId: "REG-KSA-WERA",
+    nameEn: "Water & Electricity Regulatory Authority",
+    nameAr: "هيئة تنظيم المياه والكهرباء",
+    acronym: "WERA",
+    category: "energy",
+    website: "https://wera.gov.sa",
+    mandateNote: "Water services regulation and desalination standards",
+    sectors: ["SEC-KSA-ENERGY-WATER"],
+  },
+  {
+    regulatorId: "REG-KSA-KACARE",
+    nameEn: "King Abdullah City for Atomic & Renewable Energy",
+    nameAr: "مدينة الملك عبدالله للطاقة الذرية والمتجددة",
+    acronym: "KACARE",
+    category: "energy",
+    website: "https://kacare.gov.sa",
+    mandateNote: "Nuclear energy and renewable energy regulation",
+    sectors: ["SEC-KSA-ENERGY-RENEW", "SEC-KSA-NUCLEAR"],
+  },
+  {
+    regulatorId: "REG-KSA-MEIM",
+    nameEn: "Ministry of Energy, Industry & Mineral Resources",
+    nameAr: "وزارة الطاقة والصناعة والثروة المعدنية",
+    acronym: "MEIM",
+    category: "energy",
+    website: "https://moenergy.gov.sa",
+    mandateNote: "Energy policy, oil & gas regulation, mining oversight",
+    sectors: ["SEC-KSA-ENERGY-OG", "SEC-KSA-ENERGY-ELEC", "SEC-KSA-MINING"],
+  },
+  {
+    regulatorId: "REG-KSA-SEC",
+    nameEn: "Saudi Electricity Company Regulatory Affairs",
+    nameAr: "الشؤون التنظيمية للشركة السعودية للكهرباء",
+    acronym: "SEC",
+    category: "energy",
+    website: "https://se.com.sa",
+    mandateNote: "Electricity distribution grid cybersecurity and SCADA compliance",
+    sectors: ["SEC-KSA-ENERGY-ELEC"],
+  },
+  {
+    regulatorId: "REG-KSA-SWCC",
+    nameEn: "Saline Water Conversion Corporation",
+    nameAr: "المؤسسة العامة لتحلية المياه المالحة",
+    acronym: "SWCC",
+    category: "energy",
+    website: "https://swcc.gov.sa",
+    mandateNote: "Desalination plant OT/ICS cybersecurity and operational standards",
+    sectors: ["SEC-KSA-ENERGY-WATER"],
+  },
+  {
+    regulatorId: "REG-KSA-MARAFIQ",
+    nameEn: "Marafiq (Power & Water Utility for Jubail & Yanbu)",
+    nameAr: "مرافق (شركة الكهرباء والمياه)",
+    acronym: "MARAFIQ",
+    category: "energy",
+    website: "https://marafiq.com.sa",
+    mandateNote: "Industrial utility services OT compliance for Jubail & Yanbu",
+    sectors: ["SEC-KSA-ENERGY-ELEC", "SEC-KSA-ENERGY-WATER"],
+  },
+  {
+    regulatorId: "REG-KSA-NWRC",
+    nameEn: "National Water Regulatory Commission",
+    nameAr: "اللجنة الوطنية لتنظيم المياه",
+    acronym: "NWRC",
+    category: "energy",
+    website: "https://wera.gov.sa",
+    mandateNote: "National water quality, distribution, and cybersecurity standards",
+    sectors: ["SEC-KSA-ENERGY-WATER"],
+  },
+];

@@ -1,0 +1,52 @@
+export { GenericRow } from './db-rows.types';
+export type VendorScoreSummary = any;
+export type QuestionnaireStats = any;
+export type RegulatorRequestSummary = any;
+export type PortfolioMetrics = any;
+export type SLABreachTrend = any;
+export type EngagementCycleResult = any;
+export type OverdueItem = any;
+export type EngagementScoreBreakdown = any;
+export type AutoEvalResult = any;
+export type AutoTaskConfig = any;
+export type AutoTaskResult = any;
+export type AutoTaskStats = any;
+export type ExternalRole = any;
+export type InvitationRecord = any;
+export type InvitationFilters = any;
+export type EngagementHistorySummary = any;
+export type Questionnaire = any;
+export type ActionItem = any;
+export type EvaluationResult = any;
+export type Gap = any;
+export interface Client {
+  id?: string;
+  tenantId?: string;
+  status?: string;
+  riskLevel?: string;
+  complianceScore?: number;
+  engagementScore?: number;
+  name?: string;
+  [key: string]: unknown;
+}
+export interface PortfolioHealth {
+  clientCount: number;
+  averageComplianceScore: number;
+  averageRiskLevel: string;
+  averageEngagementScore: number;
+  criticalFindings: number;
+  [key: string]: unknown;
+}
+export type Finding = any;
+export type FindingInput = any;
+export type Benchmark = any;
+export type TimelineEvent = any;
+export type Organization = any;
+export type ComplianceData = any;
+export type Evidence = any;
+export type InquiryInput = any;
+export type Inquiry = any;
+export type AuditEntry = any;
+export type Framework = any;
+export type ComplianceSyncResult = any;
+export type ApprovalRequest = any;

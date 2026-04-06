@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KSA GRC Ontology Root",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "object"
+    },
+    "tenancy": {
+      "type": "object"
+    },
+    "entities": {
+      "type": "object"
+    },
+    "inference": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "tenancy"
+  ]
+}

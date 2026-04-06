@@ -1,0 +1,88 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "dos-platform-r15",
+    "title": "DOS Platform R1.5 — Operations Dashboard",
+    "tags": ["dos", "platform", "production"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": { "from": "now-1h", "to": "now" },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Health Status",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+        "targets": [{ "expr": "up{job=\"dos-platform\"}", "legendFormat": "{{instance}}" }],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+            ]
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Request Rate",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+        "targets": [{ "expr": "rate(http_requests_total{job=\"dos-platform\"}[5m])", "legendFormat": "{{method}} {{status}}" }]
+      },
+      {
+        "id": 3,
+        "title": "P95 Latency",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+        "targets": [{ "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"dos-platform\"}[5m]))", "legendFormat": "P95" }]
+      },
+      {
+        "id": 4,
+        "title": "Error Rate",
+        "type": "gauge",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 4 },
+        "targets": [{ "expr": "rate(http_requests_total{job=\"dos-platform\",status=~\"5..\"}[5m]) / rate(http_requests_total{job=\"dos-platform\"}[5m])", "legendFormat": "5xx rate" }],
+        "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 0.01, "color": "yellow" }, { "value": 0.05, "color": "red" }] } } }
+      },
+      {
+        "id": 5,
+        "title": "Memory Usage (RSS MB)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+        "targets": [{ "expr": "process_resident_memory_bytes{job=\"dos-platform\"} / 1024 / 1024", "legendFormat": "{{instance}}" }]
+      },
+      {
+        "id": 6,
+        "title": "Active DB Connections",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "targets": [
+          { "expr": "pg_pool_total_connections{job=\"dos-platform\"}", "legendFormat": "total" },
+          { "expr": "pg_pool_idle_connections{job=\"dos-platform\"}", "legendFormat": "idle" },
+          { "expr": "pg_pool_active_connections{job=\"dos-platform\"}", "legendFormat": "active" }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Tenant Count",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+        "targets": [{ "expr": "dos_active_tenants", "legendFormat": "active tenants" }]
+      },
+      {
+        "id": 8,
+        "title": "Redis Status",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+        "targets": [{ "expr": "redis_up{job=\"dos-platform\"}", "legendFormat": "redis" }],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

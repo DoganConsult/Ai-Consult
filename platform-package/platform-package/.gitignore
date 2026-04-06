@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+backend/dist/
+frontend/dist/
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.production
+backend/.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Coverage
+coverage/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

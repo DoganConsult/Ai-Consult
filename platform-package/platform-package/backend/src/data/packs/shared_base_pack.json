@@ -1,0 +1,118 @@
+{
+  "packId": "shared_base_pack",
+  "pack_key": "shared_base_pack",
+  "pack_name": "Shared Base Pack",
+  "version": "1.0.0",
+  "pack_type": "platform_base",
+  "description": "Foundation pack installed for every tenant — core roles, dashboards, and workflows",
+  "dependencies": [],
+  "compatibility": {
+    "min_platform_version": "1.0.0",
+    "required_modules": []
+  },
+  "frameworkRefs": [],
+  "artifacts": {
+    "controls": [],
+    "mappings": [],
+    "testProcedures": [],
+    "evidenceTemplates": []
+  },
+  "metadata": {
+    "publisher": "Shahin-AI",
+    "publishedAt": "2026-03-01",
+    "changelog": "Initial shared base pack — roles, dashboards, workflows for all tenants",
+    "minPlatformVersion": "1.0.0"
+  },
+  "modules": {
+    "agrc": true
+  },
+  "feature_flags": {},
+  "limits_overrides": {},
+  "content_pack_refs": [],
+  "seed_payload": {
+    "workspace_profile": {
+      "default_dashboard": "admin_overview",
+      "enforcement_mode": "advisory"
+    },
+    "default_workspaces": [
+      { "name": "Primary Workspace", "type": "core" }
+    ]
+  },
+  "role_pack": {
+    "roles": [
+      { "code": "admin", "name_en": "Admin", "name_ar": "مدير", "home_route": "/workspace-home", "permissions": ["*"] },
+      { "code": "compliance_lead", "name_en": "Compliance Lead", "name_ar": "قائد الامتثال", "home_route": "/workspace-home", "permissions": ["compliance:*", "controls:*", "evidence:*"] },
+      { "code": "risk_lead", "name_en": "Risk Lead", "name_ar": "قائد المخاطر", "home_route": "/workspace-home", "permissions": ["risks:*", "controls:read"] },
+      { "code": "auditor", "name_en": "Auditor", "name_ar": "مدقق", "home_route": "/workspace-home", "permissions": ["audit:*", "controls:read", "evidence:read"] },
+      { "code": "viewer", "name_en": "Viewer", "name_ar": "مشاهد", "home_route": "/workspace-home", "permissions": ["analytics:read"] }
+    ]
+  },
+  "dashboard_pack": {
+    "layouts": [
+      {
+        "code": "admin_overview",
+        "name_en": "Admin Overview",
+        "name_ar": "نظرة عامة للمدير",
+        "role_code": "admin",
+        "config": {
+          "widgets": ["compliance_score", "risk_heatmap", "overdue_tasks", "open_findings", "evidence_freshness", "audit_readiness"]
+        }
+      },
+      {
+        "code": "compliance_dashboard",
+        "name_en": "Compliance Dashboard",
+        "name_ar": "لوحة الامتثال",
+        "role_code": "compliance_lead",
+        "config": {
+          "widgets": ["compliance_score", "controls_coverage", "evidence_freshness", "overdue_tasks"]
+        }
+      },
+      {
+        "code": "risk_dashboard",
+        "name_en": "Risk Dashboard",
+        "name_ar": "لوحة المخاطر",
+        "role_code": "risk_lead",
+        "config": {
+          "widgets": ["risk_heatmap", "top_risks", "risk_appetite_breaches", "treatment_completion"]
+        }
+      }
+    ]
+  },
+  "workflow_pack": {
+    "templates": [
+      {
+        "code": "policy_approval",
+        "name_en": "Policy Approval",
+        "name_ar": "اعتماد السياسة",
+        "trigger_type": "manual",
+        "steps": [
+          { "step_code": "draft", "step_name": "Draft Policy", "assignee_role": "compliance_lead" },
+          { "step_code": "review", "step_name": "Review", "assignee_role": "admin" },
+          { "step_code": "approve", "step_name": "Approve", "assignee_role": "admin" }
+        ]
+      },
+      {
+        "code": "risk_assessment",
+        "name_en": "Risk Assessment",
+        "name_ar": "تقييم المخاطر",
+        "trigger_type": "manual",
+        "steps": [
+          { "step_code": "identify", "step_name": "Identify Risks", "assignee_role": "risk_lead" },
+          { "step_code": "assess", "step_name": "Assess Impact", "assignee_role": "risk_lead" },
+          { "step_code": "approve", "step_name": "Approve Treatment", "assignee_role": "admin" }
+        ]
+      },
+      {
+        "code": "evidence_collection",
+        "name_en": "Evidence Collection",
+        "name_ar": "جمع الأدلة",
+        "trigger_type": "scheduled",
+        "steps": [
+          { "step_code": "collect", "step_name": "Collect Evidence", "assignee_role": "compliance_lead" },
+          { "step_code": "review", "step_name": "Review Evidence", "assignee_role": "auditor" },
+          { "step_code": "archive", "step_name": "Archive", "assignee_role": "admin" }
+        ]
+      }
+    ]
+  }
+}

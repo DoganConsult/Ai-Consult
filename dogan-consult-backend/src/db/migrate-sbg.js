@@ -1,0 +1,328 @@
+import pool from './pool.js';
+
+const sbgMigrations = [
+  `CREATE TABLE IF NOT EXISTS sbg_products (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(500),
+    name_ar VARCHAR(500),
+    name_en VARCHAR(500),
+    description TEXT,
+    description_ar TEXT,
+    description_en TEXT,
+    category VARCHAR(255),
+    price NUMERIC(12,2),
+    currency VARCHAR(10) DEFAULT 'SAR',
+    image_url TEXT,
+    features JSONB DEFAULT '[]',
+    is_active BOOLEAN DEFAULT true,
+    "order" INT DEFAULT 0,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_sectors (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name_ar VARCHAR(500),
+    name_en VARCHAR(500),
+    description_ar TEXT,
+    description_en TEXT,
+    icon VARCHAR(100),
+    image_url TEXT,
+    color VARCHAR(50),
+    "order" INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_inquiries (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    contact_name VARCHAR(255),
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(50),
+    company VARCHAR(255),
+    product_id UUID,
+    subject VARCHAR(500),
+    message TEXT,
+    status VARCHAR(50) DEFAULT 'new',
+    priority VARCHAR(20) DEFAULT 'normal',
+    notes TEXT,
+    assigned_to VARCHAR(255),
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_demo_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255),
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    company VARCHAR(255),
+    product_id UUID,
+    product_name VARCHAR(255),
+    preferred_date TIMESTAMPTZ,
+    message TEXT,
+    status VARCHAR(50) DEFAULT 'pending',
+    notes TEXT,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_documents (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title VARCHAR(500),
+    description TEXT,
+    file_url TEXT,
+    file_type VARCHAR(50),
+    file_size INT,
+    category VARCHAR(100),
+    tags JSONB DEFAULT '[]',
+    views_count INT DEFAULT 0,
+    uploaded_by VARCHAR(255),
+    is_public BOOLEAN DEFAULT false,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_trainings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title VARCHAR(500),
+    title_ar VARCHAR(500),
+    description TEXT,
+    description_ar TEXT,
+    instructor VARCHAR(255),
+    start_date TIMESTAMPTZ,
+    end_date TIMESTAMPTZ,
+    location VARCHAR(255),
+    max_capacity INT DEFAULT 0,
+    enrolled_count INT DEFAULT 0,
+    price NUMERIC(12,2),
+    status VARCHAR(50) DEFAULT 'upcoming',
+    image_url TEXT,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_conversations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title VARCHAR(500),
+    user_id UUID,
+    messages JSONB DEFAULT '[]',
+    status VARCHAR(50) DEFAULT 'active',
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_email VARCHAR(255),
+    title VARCHAR(500),
+    message TEXT,
+    type VARCHAR(50) DEFAULT 'info',
+    is_read BOOLEAN DEFAULT false,
+    is_email_sent BOOLEAN DEFAULT false,
+    link VARCHAR(500),
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_approval_gates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255),
+    description TEXT,
+    entity_type VARCHAR(100),
+    conditions JSONB DEFAULT '{}',
+    approvers JSONB DEFAULT '[]',
+    auto_approve_after_hours INT,
+    escalation_email VARCHAR(255),
+    is_active BOOLEAN DEFAULT true,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_approval_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    gate_id UUID,
+    entity_type VARCHAR(100),
+    entity_id UUID,
+    requester_email VARCHAR(255),
+    approver_email VARCHAR(255),
+    status VARCHAR(50) DEFAULT 'pending',
+    decision_note TEXT,
+    decided_at TIMESTAMPTZ,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_workflow_rules (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255),
+    description TEXT,
+    entity_type VARCHAR(100),
+    trigger_event VARCHAR(100),
+    conditions JSONB DEFAULT '{}',
+    actions JSONB DEFAULT '[]',
+    is_active BOOLEAN DEFAULT true,
+    priority INT DEFAULT 0,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_visitor_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_id VARCHAR(255),
+    pages_visited JSONB DEFAULT '[]',
+    products_viewed JSONB DEFAULT '[]',
+    actions JSONB DEFAULT '[]',
+    referrer TEXT,
+    user_agent TEXT,
+    ip_address VARCHAR(50),
+    country VARCHAR(100),
+    city VARCHAR(100),
+    duration_seconds INT DEFAULT 0,
+    last_visit TIMESTAMPTZ DEFAULT NOW(),
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_sector_campaigns (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sector_id UUID,
+    name VARCHAR(255),
+    description TEXT,
+    status VARCHAR(50) DEFAULT 'active',
+    start_date TIMESTAMPTZ,
+    end_date TIMESTAMPTZ,
+    budget NUMERIC(12,2),
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_lead_magnets (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    campaign_id UUID,
+    title VARCHAR(500),
+    description TEXT,
+    file_url TEXT,
+    download_count INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_campaign_leads (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    campaign_id UUID,
+    name VARCHAR(255),
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    company VARCHAR(255),
+    source VARCHAR(100),
+    status VARCHAR(50) DEFAULT 'new',
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_agent_configs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255),
+    description TEXT,
+    agent_type VARCHAR(100),
+    config JSONB DEFAULT '{}',
+    is_active BOOLEAN DEFAULT true,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_agent_runs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    agent_config_id UUID,
+    status VARCHAR(50) DEFAULT 'running',
+    input JSONB DEFAULT '{}',
+    output JSONB DEFAULT '{}',
+    error TEXT,
+    duration_ms INT,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_agent_notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    agent_config_id UUID,
+    title VARCHAR(500),
+    message TEXT,
+    type VARCHAR(50) DEFAULT 'info',
+    is_read BOOLEAN DEFAULT false,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_marketplace_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255),
+    description TEXT,
+    category VARCHAR(100),
+    author VARCHAR(255),
+    config JSONB DEFAULT '{}',
+    downloads INT DEFAULT 0,
+    rating NUMERIC(3,2) DEFAULT 0,
+    price NUMERIC(12,2) DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_marketplace_reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    item_id UUID,
+    user_email VARCHAR(255),
+    rating INT,
+    comment TEXT,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS sbg_users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) UNIQUE,
+    password_hash VARCHAR(255),
+    full_name VARCHAR(255),
+    role VARCHAR(50) DEFAULT 'user',
+    company VARCHAR(255),
+    phone VARCHAR(50),
+    avatar_url TEXT,
+    is_active BOOLEAN DEFAULT true,
+    last_login TIMESTAMPTZ,
+    metadata JSONB DEFAULT '{}',
+    created_date TIMESTAMPTZ DEFAULT NOW(),
+    updated_date TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_sbg_products_active ON sbg_products(is_active, "order")`,
+  `CREATE INDEX IF NOT EXISTS idx_sbg_sectors_order ON sbg_sectors("order")`,
+  `CREATE INDEX IF NOT EXISTS idx_sbg_inquiries_email ON sbg_inquiries(contact_email)`,
+  `CREATE INDEX IF NOT EXISTS idx_sbg_inquiries_status ON sbg_inquiries(status)`,
+  `CREATE INDEX IF NOT EXISTS idx_sbg_demo_requests_email ON sbg_demo_requests(email)`,
+  `CREATE INDEX IF NOT EXISTS idx_sbg_demo_requests_status ON sbg_demo_requests(status)`,
+  `CREATE INDEX IF NOT EXISTS idx_sbg_notifications_email ON sbg_notifications(user_email, is_read)`,
+  `CREATE INDEX IF NOT EXISTS idx_sbg_visitor_sessions_sid ON sbg_visitor_sessions(session_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_sbg_approval_requests_status ON sbg_approval_requests(status)`,
+  `CREATE INDEX IF NOT EXISTS idx_sbg_users_email ON sbg_users(email)`,
+];
+
+export async function runSbgMigrations() {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    for (const sql of sbgMigrations) {
+      await client.query(sql);
+    }
+    await client.query('COMMIT');
+    console.log('SBG migrations completed');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('SBG migration failed:', err);
+    throw err;
+  } finally {
+    client.release();
+  }
+}

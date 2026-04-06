@@ -1,0 +1,244 @@
+{
+  "executive": {
+    "nameEn": "Executive Dashboard",
+    "nameAr": "لوحة القيادة التنفيذية",
+    "widgets": [
+      { "id": "executive.compliance_score", "x": 0, "y": 0, "w": 3, "h": 2 },
+      { "id": "executive.risk_posture", "x": 3, "y": 0, "w": 3, "h": 2 },
+      { "id": "executive.audit_readiness", "x": 6, "y": 0, "w": 3, "h": 2 },
+      { "id": "executive.evidence_freshness", "x": 9, "y": 0, "w": 3, "h": 2 },
+      { "id": "risk.heatmap", "x": 0, "y": 2, "w": 6, "h": 4 },
+      { "id": "compliance.posture_chart", "x": 6, "y": 2, "w": 6, "h": 4 }
+    ]
+  },
+  "compliance_ops": {
+    "nameEn": "Compliance Operations",
+    "nameAr": "عمليات الامتثال",
+    "widgets": [
+      { "id": "compliance.score_gauge", "x": 0, "y": 0, "w": 4, "h": 2 },
+      { "id": "compliance.gap_by_framework", "x": 4, "y": 0, "w": 4, "h": 2 },
+      { "id": "compliance.control_coverage", "x": 8, "y": 0, "w": 4, "h": 2 },
+      { "id": "compliance.posture_chart", "x": 0, "y": 2, "w": 6, "h": 4 },
+      { "id": "compliance.obligation_status", "x": 6, "y": 2, "w": 6, "h": 4 }
+    ]
+  },
+  "risk_ops": {
+    "nameEn": "Risk Operations",
+    "nameAr": "عمليات المخاطر",
+    "widgets": [
+      { "id": "risk.heatmap", "x": 0, "y": 0, "w": 6, "h": 4 },
+      { "id": "risk.top_risks", "x": 6, "y": 0, "w": 6, "h": 4 },
+      { "id": "risk.treatment_progress", "x": 0, "y": 4, "w": 4, "h": 3 },
+      { "id": "risk.kri_alerts", "x": 4, "y": 4, "w": 4, "h": 3 },
+      { "id": "risk.appetite_gauge", "x": 8, "y": 4, "w": 4, "h": 3 }
+    ]
+  },
+  "evidence_ops": {
+    "nameEn": "Evidence Operations",
+    "nameAr": "عمليات الأدلة",
+    "widgets": [
+      { "id": "evidence.freshness_gauge", "x": 0, "y": 0, "w": 4, "h": 2 },
+      { "id": "evidence.overdue_queue", "x": 4, "y": 0, "w": 4, "h": 2 },
+      { "id": "evidence.coverage_map", "x": 8, "y": 0, "w": 4, "h": 2 },
+      { "id": "evidence.collection_timeline", "x": 0, "y": 2, "w": 12, "h": 3 }
+    ]
+  },
+  "audit_ops": {
+    "nameEn": "Audit Operations",
+    "nameAr": "عمليات التدقيق",
+    "widgets": [
+      { "id": "audit.findings_by_severity", "x": 0, "y": 0, "w": 6, "h": 3 },
+      { "id": "audit.capa_progress", "x": 6, "y": 0, "w": 6, "h": 3 },
+      { "id": "audit.engagement_timeline", "x": 0, "y": 3, "w": 12, "h": 3 }
+    ]
+  },
+  "governance_hub": {
+    "nameEn": "Governance Hub",
+    "nameAr": "مركز الحوكمة",
+    "widgets": [
+      { "id": "governance.committee_calendar", "x": 0, "y": 0, "w": 6, "h": 3 },
+      { "id": "governance.decision_tracker", "x": 6, "y": 0, "w": 6, "h": 3 },
+      { "id": "governance.board_pack_status", "x": 0, "y": 3, "w": 6, "h": 3 },
+      { "id": "governance.mandate_compliance", "x": 6, "y": 3, "w": 6, "h": 3 }
+    ]
+  },
+  "ai_suite": {
+    "nameEn": "AI Operations",
+    "nameAr": "عمليات الذكاء الاصطناعي",
+    "widgets": [
+      { "id": "ai.agent_status", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "ai.recommendation_feed", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "ai.automation_coverage", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "ai_governance": {
+    "nameEn": "AI Governance",
+    "nameAr": "حوكمة الذكاء الاصطناعي",
+    "widgets": [
+      { "id": "ai-governance.model_inventory", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "ai-governance.compliance_status", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "ai-governance.risk_alerts", "x": 8, "y": 0, "w": 4, "h": 3 },
+      { "id": "ai-governance.enforcement_status", "x": 0, "y": 3, "w": 6, "h": 3 },
+      { "id": "ai-governance.audit_trail", "x": 6, "y": 3, "w": 6, "h": 3 }
+    ]
+  },
+  "incident_hub": {
+    "nameEn": "Incident Hub",
+    "nameAr": "مركز الحوادث",
+    "widgets": [
+      { "id": "incident.active_count", "x": 0, "y": 0, "w": 3, "h": 2 },
+      { "id": "incident.severity_distribution", "x": 3, "y": 0, "w": 3, "h": 2 },
+      { "id": "incident.response_time", "x": 6, "y": 0, "w": 3, "h": 2 },
+      { "id": "incident.trend_chart", "x": 9, "y": 0, "w": 3, "h": 2 },
+      { "id": "incident.recent_incidents", "x": 0, "y": 2, "w": 6, "h": 4 },
+      { "id": "incident.investigation_queue", "x": 6, "y": 2, "w": 6, "h": 4 }
+    ]
+  },
+  "vendor_hub": {
+    "nameEn": "Vendor Risk Hub",
+    "nameAr": "مركز مخاطر الموردين",
+    "widgets": [
+      { "id": "vendor.total_count", "x": 0, "y": 0, "w": 3, "h": 2 },
+      { "id": "vendor.risk_distribution", "x": 3, "y": 0, "w": 3, "h": 2 },
+      { "id": "vendor.assessment_due", "x": 6, "y": 0, "w": 3, "h": 2 },
+      { "id": "vendor.sla_compliance", "x": 9, "y": 0, "w": 3, "h": 2 },
+      { "id": "vendor.risk_heatmap", "x": 0, "y": 2, "w": 6, "h": 4 },
+      { "id": "vendor.recent_assessments", "x": 6, "y": 2, "w": 6, "h": 4 }
+    ]
+  },
+  "policy_ops": {
+    "nameEn": "Policy Management",
+    "nameAr": "إدارة السياسات",
+    "widgets": [
+      { "id": "policy.lifecycle_status", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "policy.review_schedule", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "policy.attestation_progress", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "workflow_ops": {
+    "nameEn": "Workflow Operations",
+    "nameAr": "عمليات سير العمل",
+    "widgets": [
+      { "id": "workflow.active_instances", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "workflow.sla_compliance", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "workflow.bottleneck_analysis", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "foundation_ops": {
+    "nameEn": "Foundation Overview",
+    "nameAr": "نظرة عامة على الأساسيات",
+    "widgets": [
+      { "id": "foundation.org_coverage", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "foundation.role_assignment", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "foundation.team_health", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "qiyas_ops": {
+    "nameEn": "Qiyas Assessments",
+    "nameAr": "تقييمات قياس",
+    "widgets": [
+      { "id": "qiyas.assessment_progress", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "qiyas.maturity_scores", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "qiyas.benchmark_comparison", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "bcp_ops": {
+    "nameEn": "Business Continuity",
+    "nameAr": "استمرارية الأعمال",
+    "widgets": [
+      { "id": "bcp.plan_status", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "bcp.exercise_schedule", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "bcp.recovery_metrics", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "asset_ops": {
+    "nameEn": "Asset Management",
+    "nameAr": "إدارة الأصول",
+    "widgets": [
+      { "id": "asset.inventory_summary", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "asset.classification_chart", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "asset.lifecycle_status", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "exception_ops": {
+    "nameEn": "Exception Governance",
+    "nameAr": "إدارة الاستثناءات",
+    "widgets": [
+      { "id": "exception.active_count", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "exception.expiry_timeline", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "exception.risk_impact", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "remediation_ops": {
+    "nameEn": "Remediation Tracking",
+    "nameAr": "تتبع المعالجة",
+    "widgets": [
+      { "id": "remediation.progress_tracker", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "remediation.sla_status", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "remediation.by_category", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "action_ops": {
+    "nameEn": "Action Items",
+    "nameAr": "بنود الإجراء",
+    "widgets": [
+      { "id": "action.open_items", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "action.completion_trend", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "action.overdue_count", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "training_ops": {
+    "nameEn": "Training & Awareness",
+    "nameAr": "التدريب والتوعية",
+    "widgets": [
+      { "id": "training.completion_rate", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "training.upcoming_assignments", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "training.certification_status", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "integration_ops": {
+    "nameEn": "Integration Health",
+    "nameAr": "صحة التكامل",
+    "widgets": [
+      { "id": "integration.connector_health", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "integration.sync_status", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "integration.error_rate", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "notification_ops": {
+    "nameEn": "Notification Center",
+    "nameAr": "مركز الإشعارات",
+    "widgets": [
+      { "id": "notification.delivery_rate", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "notification.channel_health", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "notification.pending_queue", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "analytics_ops": {
+    "nameEn": "Analytics Overview",
+    "nameAr": "نظرة عامة على التحليلات",
+    "widgets": [
+      { "id": "analytics.kpi_summary", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "analytics.trend_analysis", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "analytics.data_freshness", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "team_ops": {
+    "nameEn": "Team Performance",
+    "nameAr": "أداء الفريق",
+    "widgets": [
+      { "id": "team.workload_distribution", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "team.task_completion", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "team.sla_adherence", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  },
+  "admin_ops": {
+    "nameEn": "Administration",
+    "nameAr": "الإدارة",
+    "widgets": [
+      { "id": "admin.user_activity", "x": 0, "y": 0, "w": 4, "h": 3 },
+      { "id": "admin.module_health", "x": 4, "y": 0, "w": 4, "h": 3 },
+      { "id": "admin.license_usage", "x": 8, "y": 0, "w": 4, "h": 3 }
+    ]
+  }
+}

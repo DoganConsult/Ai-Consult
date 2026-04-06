@@ -1,0 +1,972 @@
+schema:
+  name: "KSA GRC Full Hierarchy Ontology"
+  version: "1.0.0"
+  updated_at_utc: "2026-02-23T00:00:00Z"
+  principles:
+    - "Full traceability: Control ↔ TestProcedure ↔ EvidenceRequirement ↔ EvidenceArtifact ↔ TestResult ↔ Score ↔ Report ↔ AuditPackage."
+    - "Separation of concerns: Global catalogs are immutable/versioned; Tenant runtime artifacts are tenant-scoped and derived."
+    - "No free-text for classification/inference signals (only enums/booleans/numbers/multi-select). Free-text allowed only for human notes fields."
+    - "Versioning is mandatory at FrameworkVersion (and optionally ControlSet) with effective/retired dates."
+    - "Every inference decision must be explainable (signals + rule IDs + confidence)."
+    - "Provisioning must be idempotent and resumable (answersHash as idempotency key)."
+
+tenancy:
+  global_catalog_entities:
+    - Sector
+    - Subsector
+    - BusinessActivityLicense
+    - SectorProfileTemplate
+    - Regulator
+    - RegulatorSectorMap
+    - ReportingObligationTemplate
+    - FrameworkLayer
+    - Framework
+    - FrameworkVersion
+    - FrameworkMappingTarget
+    - ControlDomain
+    - ControlFamily
+    - ControlObjective
+    - Control
+    - TestProcedure
+    - ControlApplicabilityRule
+    - EvidenceBaselineProfile
+    - EvidenceCategory
+    - EvidenceArtifactType
+    - EvidenceRequirementTemplate
+    - ScoringPolicy
+    - ReportTemplate
+    - ReportSectionTemplate
+    - RoleBlueprint
+    - DashboardTemplate
+    - WorkflowTemplate
+    - AssessmentTemplate
+    - PlanTemplate90D
+    - SignalDefinition
+    - Question
+    - QuestionOption
+    - QuestionSignalMapping
+    - SignalToRegulatorRule
+    - SignalToFrameworkRule
+    - SignalToControlRule
+    - NextQuestionPolicy
+  tenant_runtime_entities:
+    - Tenant
+    - Workspace
+    - WorkspaceModule
+    - WorkspaceRoleAssignment
+    - WorkspaceDashboard
+    - WorkflowInstance
+    - EvidenceArtifact
+    - CustodyEvent
+    - EvidenceTask
+    - AssessmentRun
+    - TestRun
+    - TestResult
+    - ScoreRun
+    - ScoreFact
+    - ScoreAggregate
+    - ReportRun
+    - AuditPackage
+    - TraceabilityMatrix
+    - ControlException
+    - CompensatingControlInstance
+    - NinetyDayPlan
+    - PlanItemInstance
+    - ProvisioningJob
+    - ProvisioningStep
+
+identifiers:
+  id_type: "uuid"
+  canonical_codes:
+    - sector_code
+    - subsector_code
+    - license_type
+    - regulator_code
+    - framework_code
+    - framework_version_label
+    - control_code
+    - evidence_artifact_type_code
+    - scoring_policy_code
+    - report_template_code
+    - workflow_template_code
+    - dashboard_code
+    - assessment_template_code
+    - plan_template_code
+    - question_code
+    - signal_key
+
+# ============================================
+# MASTER CHAIN (NO GAPS)
+# KSA GRC Universe → Sector → Regulators → Frameworks → Controls → Evidence → Scoring → Reporting → Plan Outputs
+# ============================================
+
+types:
+  # Deterministic rule expression format.
+  # Recommended: JSONLogic (portable) or a small DSL (compiled to SQL/EF predicates).
+  RuleExpr:
+    allowed:
+      - jsonlogic
+      - decision-table
+      - simple-dsl
+    must_be_deterministic: true
+
+  Confidence:
+    range: [0.0, 1.0]
+
+  Cadence:
+    enum: [continuous, daily, weekly, monthly, quarterly, annual]
+
+  QualityTier:
+    enum: [A, B, C]  # A=system-generated tamper-evident; B=exported logs/reports; C=human-authored docs
+
+  ControlState:
+    enum: [Applicable, NotApplicable, ApplicableIfConfirmed]
+
+  TestMethod:
+    enum: [inspect, interview, test, observe, automated]
+
+  ExportFormat:
+    enum: [PDF, XLSX, ZIP]
+
+entities:
+
+  # -----------------------
+  # 1) SECTOR HIERARCHY
+  # -----------------------
+  Sector:
+    keys: [sector_id]
+    required:
+      - sector_id
+      - sector_code
+      - label_en
+      - label_ar
+      - description_en
+      - description_ar
+      - evidence_baseline_profile_id
+    fields:
+      sector_id: uuid
+      sector_code: string
+      label_en: string
+      label_ar: string
+      description_en: string
+      description_ar: string
+      default_regulator_candidates: [regulator_id]
+      default_framework_candidates: [framework_id]
+      applicability_triggers: [RuleExpr]
+      evidence_baseline_profile_id: uuid
+      display_order: int
+      metadata: object
+
+  Subsector:
+    keys: [subsector_id]
+    required:
+      - subsector_id
+      - sector_id
+      - subsector_code
+      - label_en
+      - label_ar
+    fields:
+      subsector_id: uuid
+      sector_id: uuid
+      subsector_code: string
+      label_en: string
+      label_ar: string
+      description_en: string?
+      description_ar: string?
+      regulator_overrides:
+        add: [regulator_id]
+        remove: [regulator_id]
+      framework_overrides:
+        add: [framework_id]
+        remove: [framework_id]
+      display_order: int
+      metadata: object
+
+  BusinessActivityLicense:
+    keys: [activity_id]
+    required:
+      - activity_id
+      - subsector_id
+      - license_type
+      - regulator_binding_strength
+    fields:
+      activity_id: uuid
+      subsector_id: uuid
+      license_type: string            # enum in your code (e.g., PAYMENT_PROCESSOR, HOSPITAL_OPERATOR, ISP, etc.)
+      licensing_authority_hint: string # keep as enum in UI; store string code in catalog
+      regulator_binding_strength: enum(hard, soft)
+      mandatory_frameworks: [framework_id]
+      metadata: object
+
+  # Templates that define default entity_type/criticality/digital_role per sector.
+  SectorProfileTemplate:
+    keys: [sector_profile_template_id]
+    required:
+      - sector_profile_template_id
+      - sector_id
+      - entity_type
+      - criticality_tier
+      - digital_role
+    fields:
+      sector_profile_template_id: uuid
+      sector_id: uuid
+      entity_type: enum(gov, semi-gov, private, public-listed, non-profit)
+      criticality_tier: enum(critical-infrastructure, essential-service, standard-enterprise)
+      digital_role: enum(data-controller, data-processor, saas-provider, msp, marketplace, internal-only)
+      branch_count_tier: enum(0, 1, 2-5, 6-20, 21-100, 100+)
+      operational_countries: [string]   # ISO-3166 alpha-2
+      metadata: object
+
+  # -----------------------
+  # 2) REGULATOR HIERARCHY
+  # -----------------------
+  Regulator:
+    keys: [regulator_id]
+    required:
+      - regulator_id
+      - regulator_code
+      - name_en
+      - name_ar
+      - regulator_type
+      - enforcement_level
+    fields:
+      regulator_id: uuid
+      regulator_code: string          # e.g., NCA, SAMA, CST, SDAIA, NDMO, etc.
+      name_en: string
+      name_ar: string
+      abbreviation: string?
+      regulator_type: enum(horizontal, vertical, functional, oversight)
+      scope_notes_en: string?
+      scope_notes_ar: string?
+      regulated_entity_types: [enum(gov, semi-gov, private, public-listed, non-profit)]
+      enforcement_level: enum(mandatory, conditional, guidance)
+      compliance_assurance_model: enum(self-assess, external-audit, regulator-exam, mixed)
+      framework_catalog: [framework_id]
+      reporting_obligations: [obligation_id]
+      metadata: object
+
+  RegulatorSectorMap:
+    keys: [map_id]
+    required:
+      - map_id
+      - regulator_id
+      - sector_id
+      - binding_strength
+    fields:
+      map_id: uuid
+      regulator_id: uuid
+      sector_id: uuid
+      subsector_id: uuid?
+      activity_id: uuid?
+      binding_strength: enum(hard, soft)
+      trigger_rules: [RuleExpr]        # licensing, data types, criticality, etc.
+      exemption_rules: [RuleExpr]
+      metadata: object
+
+  ReportingObligationTemplate:
+    keys: [obligation_id]
+    required:
+      - obligation_id
+      - regulator_id
+      - label_en
+      - label_ar
+      - schedule_rrule
+      - timezone
+    fields:
+      obligation_id: uuid
+      regulator_id: uuid
+      label_en: string
+      label_ar: string
+      schedule_rrule: string           # VEVENT RRULE only (store DTSTART in runtime schedule)
+      timezone: string                 # e.g., Asia/Riyadh
+      delivery_channel: enum(portal, email, physical, api, mixed)
+      required_report_templates: [report_template_id]
+      required_artifact_types: [artifact_type_id]
+      audience: enum(regulator, executive, audit, ops)
+      metadata: object
+
+  # -----------------------
+  # 3) FRAMEWORK HIERARCHY
+  # -----------------------
+  FrameworkLayer:
+    keys: [layer_id]
+    required: [layer_id, layer_type, label_en, label_ar]
+    fields:
+      layer_id: uuid
+      layer_type: enum(legal-mandate, regulatory-framework, implementation-standards, guidance-playbooks)
+      label_en: string
+      label_ar: string
+      metadata: object
+
+  Framework:
+    keys: [framework_id]
+    required:
+      - framework_id
+      - framework_code
+      - framework_name_en
+      - framework_name_ar
+      - framework_type
+      - authority_level
+      - layer_id
+    fields:
+      framework_id: uuid
+      framework_code: string           # e.g., NCA_ECC, SAMA_CSF, CST_CRF, PDPL, NDMO, ISO27001, etc.
+      framework_name_en: string
+      framework_name_ar: string
+      owner_regulator_id: uuid?
+      framework_type: enum(cyber, privacy, resilience, governance, risk, audit, other)
+      authority_level: enum(mandatory, referenced, optional)
+      scope_definition_en: string?
+      scope_definition_ar: string?
+      versioning_model: enum(semantic, dated, hybrid)
+      control_model_type: enum(domain-family-control, clause-subclause, custom)
+      assessment_model: enum(maturity, binary, hybrid)
+      mapping_targets: [target_id]
+      layer_id: uuid
+      metadata: object
+
+  FrameworkVersion:
+    keys: [framework_version_id]
+    required:
+      - framework_version_id
+      - framework_id
+      - version_label
+      - published_at
+      - effective_at
+      - control_set_id
+    fields:
+      framework_version_id: uuid
+      framework_id: uuid
+      version_label: string            # e.g., "2-2024"
+      published_at: date
+      effective_at: date
+      retired_at: date?
+      source_url: string?
+      change_log_en: string?
+      change_log_ar: string?
+      control_set_id: uuid             # ties to the domain/family/objective/control set in this version
+      metadata: object
+
+  FrameworkMappingTarget:
+    keys: [target_id]
+    required: [target_id, name, type]
+    fields:
+      target_id: uuid
+      name: string                     # e.g., ISO 27001, NIST CSF
+      type: enum(ISO, NIST, CIS, COBIT, ITIL, other)
+      metadata: object
+
+  # -----------------------
+  # 4) CONTROL HIERARCHY
+  # -----------------------
+  ControlDomain:
+    keys: [domain_id]
+    required: [domain_id, framework_version_id, code, label_en, label_ar]
+    fields:
+      domain_id: uuid
+      framework_version_id: uuid
+      code: string
+      label_en: string
+      label_ar: string
+      display_order: int
+      metadata: object
+
+  ControlFamily:
+    keys: [family_id]
+    required: [family_id, domain_id, code, label_en, label_ar]
+    fields:
+      family_id: uuid
+      domain_id: uuid
+      code: string
+      label_en: string
+      label_ar: string
+      display_order: int
+      metadata: object
+
+  ControlObjective:
+    keys: [objective_id]
+    required: [objective_id, family_id, code, label_en, label_ar]
+    fields:
+      objective_id: uuid
+      family_id: uuid
+      code: string
+      label_en: string
+      label_ar: string
+      display_order: int
+      metadata: object
+
+  Control:
+    keys: [control_id]
+    required:
+      - control_id
+      - framework_version_id
+      - control_code
+      - domain_id
+      - family_id
+      - objective_id
+      - title_en
+      - title_ar
+      - requirement_text_en
+      - requirement_text_ar
+      - criticality_weight
+      - scoring_profile_id
+    fields:
+      control_id: uuid
+      framework_version_id: uuid
+      control_code: string
+      domain_id: uuid
+      family_id: uuid
+      objective_id: uuid
+      title_en: string
+      title_ar: string
+      requirement_text_en: string
+      requirement_text_ar: string
+      guidance_text_en: string?
+      guidance_text_ar: string?
+      control_type: enum(prevent, detect, correct, governance, technical, process)
+      implementation_level: enum(policy, process, technical, hybrid)
+      criticality_weight: float        # 0..1
+      risk_theme_tags: [string]
+      scoring_profile_id: uuid
+      metadata: object
+
+  TestProcedure:
+    keys: [test_id]
+    required: [test_id, control_id, test_method, expected_result]
+    fields:
+      test_id: uuid
+      control_id: uuid
+      test_method: TestMethod
+      procedure_steps: [string]
+      expected_result: string
+      sampling_guidance: string?
+      automation_possible: boolean
+      automation_connector_types: [enum(SIEM, IAM, EDR, MDM, Cloud, Ticketing, Email, DLP, PAM, VulnScanner, GRC, Other)]
+      metadata: object
+
+  ControlApplicabilityRule:
+    keys: [rule_id]
+    required: [rule_id, control_id, if, then_state, confidence_weight]
+    fields:
+      rule_id: uuid
+      control_id: uuid
+      if: RuleExpr
+      then_state: ControlState
+      confidence_weight: float         # 0..1
+      next_question_id: uuid?          # used only if ApplicableIfConfirmed
+      metadata: object
+
+  # Tenant-side exceptions/waivers (governance object, with expiry)
+  ControlException:
+    keys: [exception_id]
+    required: [exception_id, tenant_id, control_id, status]
+    fields:
+      exception_id: uuid
+      tenant_id: uuid
+      workspace_id: uuid?
+      control_id: uuid
+      status: enum(Requested, Approved, Rejected, Expired)
+      justification_code: string       # structured code
+      approved_by_user_id: uuid?
+      approved_by_role: string?
+      expires_at: date?
+      compensating_controls: [compensating_control_instance_id]
+      metadata: object
+
+  CompensatingControlInstance:
+    keys: [compensating_control_instance_id]
+    required: [compensating_control_instance_id, tenant_id, control_id]
+    fields:
+      compensating_control_instance_id: uuid
+      tenant_id: uuid
+      workspace_id: uuid?
+      control_id: uuid
+      label_en: string
+      label_ar: string
+      acceptance_rules: [RuleExpr]
+      evidence_requirements: [evidence_requirement_id]
+      approved_by_user_id: uuid?
+      expires_at: date?
+      metadata: object
+
+  # -----------------------
+  # 5) EVIDENCE HIERARCHY
+  # -----------------------
+  EvidenceBaselineProfile:
+    keys: [profile_id]
+    required: [profile_id, label_en, label_ar, default_cadence, default_retention_days, default_quality_floor]
+    fields:
+      profile_id: uuid
+      label_en: string
+      label_ar: string
+      default_cadence: Cadence
+      default_retention_days: int
+      default_quality_floor: QualityTier
+      metadata: object
+
+  EvidenceCategory:
+    keys: [category_id]
+    required: [category_id, code, label_en, label_ar]
+    fields:
+      category_id: uuid
+      code: string                     # POLICY, CONFIG, LOG, TICKET, TRAINING, VENDOR_ATTESTATION, etc.
+      label_en: string
+      label_ar: string
+      description_en: string?
+      description_ar: string?
+      metadata: object
+
+  EvidenceArtifactType:
+    keys: [artifact_type_id]
+    required: [artifact_type_id, category_id, code, label_en, label_ar]
+    fields:
+      artifact_type_id: uuid
+      category_id: uuid
+      code: string                     # PDF_POLICY, SIEM_EXPORT, CLOUD_CONFIG_JSON, SCREENSHOT, etc.
+      label_en: string
+      label_ar: string
+      source_types: [enum(manual-upload, system-generated, connector)]
+      default_quality_tier: QualityTier
+      mandatory_metadata_schema: object
+      metadata: object
+
+  # Template: global definition of what evidence a control needs
+  EvidenceRequirementTemplate:
+    keys: [evidence_requirement_id]
+    required:
+      - evidence_requirement_id
+      - control_id
+      - required_artifact_types
+      - min_quality_tier
+      - cadence
+      - retention_period_days
+      - freshness_window_days
+    fields:
+      evidence_requirement_id: uuid
+      control_id: uuid
+      required_artifact_types: [artifact_type_id]
+      min_quality_tier: QualityTier
+      cadence: Cadence
+      retention_period_days: int
+      review_workflow_required: boolean
+      approver_roles: [string]
+      freshness_window_days: int
+      mandatory_metadata_fields: [string]
+      metadata: object
+
+  # Tenant runtime: stored evidence objects (not "just files")
+  EvidenceArtifact:
+    keys: [evidence_id]
+    required: [evidence_id, tenant_id, artifact_type_id, source_type, collected_at, hash, version, quality_tier]
+    fields:
+      evidence_id: uuid
+      tenant_id: uuid
+      workspace_id: uuid?
+      artifact_type_id: uuid
+      source_type: enum(manual-upload, system-generated, connector)
+      collected_at: datetime
+      valid_until: datetime?
+      hash: string                     # e.g., sha256
+      version: int
+      quality_tier: QualityTier
+      metadata_kv: object
+      mapped_controls: [control_id]
+      mapped_tests: [test_id]
+      metadata: object
+
+  CustodyEvent:
+    keys: [custody_event_id]
+    required: [custody_event_id, evidence_id, event_type, at]
+    fields:
+      custody_event_id: uuid
+      evidence_id: uuid
+      event_type: enum(upload, review, approve, reject, supersede, delete, restore)
+      at: datetime
+      actor_user_id: uuid?
+      actor_role: string
+      notes: string?
+      metadata: object
+
+  EvidenceTask:
+    keys: [task_id]
+    required: [task_id, tenant_id, evidence_requirement_id, due_at, status]
+    fields:
+      task_id: uuid
+      tenant_id: uuid
+      workspace_id: uuid
+      evidence_requirement_id: uuid
+      due_at: datetime
+      status: enum(Open, Submitted, Approved, Rejected, Overdue)
+      assigned_user_id: uuid?
+      assigned_role: string?
+      submission_evidence_id: uuid?
+      metadata: object
+
+  # -----------------------
+  # 6) SCORING HIERARCHY
+  # -----------------------
+  ScoringPolicy:
+    keys: [scoring_policy_id]
+    required: [scoring_policy_id, scoring_policy_code, label_en, label_ar, weights, evidence_quality_weighting, freshness_decay_function, criticality_multiplier, exception_handling]
+    fields:
+      scoring_policy_id: uuid
+      scoring_policy_code: string
+      label_en: string
+      label_ar: string
+      weights:
+        domain: float
+        family: float
+        control: float
+      evidence_quality_weighting: { A: float, B: float, C: float }
+      freshness_decay_function: enum(linear, exponential, step)
+      criticality_multiplier: float
+      exception_handling: enum(exclude, penalize, cap)
+      metadata: object
+
+  ScoreRun:
+    keys: [score_run_id]
+    required: [score_run_id, tenant_id, at, policy_id, status]
+    fields:
+      score_run_id: uuid
+      tenant_id: uuid
+      workspace_id: uuid?
+      at: datetime
+      policy_id: uuid
+      scope: { framework_version_id: uuid?, regulator_id: uuid?, sector_id: uuid?, workspace_id: uuid? }
+      status: enum(RUNNING, DONE, FAILED)
+      metadata: object
+
+  ScoreFact:
+    keys: [fact_id]
+    required: [fact_id, score_run_id, tenant_id, control_id, result]
+    fields:
+      fact_id: uuid
+      score_run_id: uuid
+      tenant_id: uuid
+      control_id: uuid
+      test_id: uuid?
+      result: enum(pass, partial, fail, inconclusive)
+      evidence_ids: [evidence_id]
+      computed:
+        compliance: float
+        maturity: float
+        confidence: float
+        freshness: float
+        risk_weighted: float
+      metadata: object
+
+  ScoreAggregate:
+    keys: [agg_id]
+    required: [agg_id, score_run_id, tenant_id, level, ref_id, scores]
+    fields:
+      agg_id: uuid
+      score_run_id: uuid
+      tenant_id: uuid
+      level: enum(control, family, domain, framework, regulator, sector, tenant-posture)
+      ref_id: uuid
+      scores:
+        compliance_score: float
+        maturity_score: float
+        confidence_score: float
+        freshness_score: float
+        risk_weighted_score: float
+      metadata: object
+
+  # -----------------------
+  # 7) REPORTING HIERARCHY
+  # -----------------------
+  ReportTemplate:
+    keys: [report_template_id]
+    required: [report_template_id, report_template_code, label_en, label_ar, audience, scope_type, sections, export_formats]
+    fields:
+      report_template_id: uuid
+      report_template_code: string
+      label_en: string
+      label_ar: string
+      audience: enum(ops, control-owners, executive, auditor, regulator)
+      scope_type: enum(framework, regulator, sector, tenant, workspace)
+      sections: [section_id]
+      export_formats: [ExportFormat]
+      evidence_inclusion_rules: RuleExpr
+      schedule_options: [enum(on-demand, weekly, monthly, quarterly, annual)]
+      signature_requirements: { required: boolean, roles: [string] }
+      metadata: object
+
+  ReportSectionTemplate:
+    keys: [section_id]
+    required: [section_id, template_id, order, section_type, bindings]
+    fields:
+      section_id: uuid
+      template_id: uuid
+      order: int
+      section_type: enum(score-summary, trend, control-gaps, evidence-gaps, workflow-queue, audit-traceability, risk-heatmap, executive-onepager)
+      bindings: object                 # binds to ScoreAggregate layers, EvidenceTask queues, etc.
+      metadata: object
+
+  ReportRun:
+    keys: [report_run_id]
+    required: [report_run_id, tenant_id, report_template_id, generated_at, status]
+    fields:
+      report_run_id: uuid
+      tenant_id: uuid
+      workspace_id: uuid?
+      report_template_id: uuid
+      generated_at: datetime
+      export_locations: { PDF: string?, XLSX: string?, ZIP: string? }
+      status: enum(GENERATING, READY, FAILED)
+      metadata: object
+
+  AuditPackage:
+    keys: [package_id]
+    required: [package_id, tenant_id, framework_version_id, traceability_matrix_id]
+    fields:
+      package_id: uuid
+      tenant_id: uuid
+      workspace_id: uuid?
+      framework_version_id: uuid
+      control_list: [control_id]
+      evidence_bundle: [evidence_id]
+      traceability_matrix_id: uuid
+      generation_log: [string]
+      hash_manifest: object
+      metadata: object
+
+  TraceabilityMatrix:
+    keys: [matrix_id]
+    required: [matrix_id, tenant_id, rows]
+    fields:
+      matrix_id: uuid
+      tenant_id: uuid
+      rows:
+        - control_id: uuid
+          test_id: uuid?
+          evidence_id: uuid?
+          result: enum(pass, partial, fail, inconclusive)?
+      metadata: object
+
+  # -----------------------
+  # 8) PLAN OUTPUTS (workspace generation)
+  # -----------------------
+  RoleBlueprint:
+    keys: [role_id]
+    required: [role_id, code, label_en, label_ar, permissions]
+    fields:
+      role_id: uuid
+      code: string                     # TenantAdmin, ComplianceManager, etc.
+      label_en: string
+      label_ar: string
+      permissions: [string]
+      default: boolean
+      metadata: object
+
+  DashboardTemplate:
+    keys: [dashboard_template_id]
+    required: [dashboard_template_id, dashboard_code, label_en, label_ar, audience, widgets]
+    fields:
+      dashboard_template_id: uuid
+      dashboard_code: string
+      label_en: string
+      label_ar: string
+      audience: enum(ops, control-owners, executive, auditor)
+      widgets: [string]                # widget codes
+      trigger_rules: [RuleExpr]
+      metadata: object
+
+  WorkflowTemplate:
+    keys: [workflow_template_id]
+    required: [workflow_template_id, workflow_template_code, label_en, label_ar, steps, sla_days]
+    fields:
+      workflow_template_id: uuid
+      workflow_template_code: string
+      label_en: string
+      label_ar: string
+      trigger_rules: [RuleExpr]
+      default_assignee_roles: [string]
+      sla_days: int
+      steps: [object]                  # states/transitions, strongly structured
+      metadata: object
+
+  AssessmentTemplate:
+    keys: [assessment_template_id]
+    required: [assessment_template_id, assessment_template_code, label_en, label_ar, control_selection_rule, sampling_policy]
+    fields:
+      assessment_template_id: uuid
+      assessment_template_code: string
+      label_en: string
+      label_ar: string
+      trigger_rules: [RuleExpr]
+      control_selection_rule: object   # cluster-based or criticality-based
+      sampling_policy: object
+      metadata: object
+
+  PlanTemplate90D:
+    keys: [plan_template_id]
+    required: [plan_template_id, plan_template_code, label_en, label_ar, items]
+    fields:
+      plan_template_id: uuid
+      plan_template_code: string
+      label_en: string
+      label_ar: string
+      trigger_rules: [RuleExpr]
+      weeks: 13
+      items: [PlanItemTemplate]
+      metadata: object
+
+  PlanItemTemplate:
+    fields:
+      item_template_id: uuid
+      week: int                        # 1..13
+      type: enum(policy, control-implementation, evidence-collection, assessment, report, workflow)
+      title_en: string
+      title_ar: string
+      owner_role: string
+      due_in_days: int
+      dependencies: [uuid]
+      outputs: [string]
+      metadata: object
+
+  NinetyDayPlan:
+    keys: [plan90_id]
+    required: [plan90_id, tenant_id, workspace_id, start_at, items]
+    fields:
+      plan90_id: uuid
+      tenant_id: uuid
+      workspace_id: uuid
+      start_at: date
+      items: [PlanItemInstance]
+      metadata: object
+
+  PlanItemInstance:
+    fields:
+      item_id: uuid
+      week: int
+      type: enum(policy, control-implementation, evidence-collection, assessment, report, workflow)
+      title_en: string
+      title_ar: string
+      owner_role: string
+      due_at: datetime
+      status: enum(Open, InProgress, Done, Blocked)
+      created_artifacts:
+        evidence_tasks: [task_id]
+        workflow_instances: [workflow_instance_id]
+        report_runs: [report_run_id]
+      metadata: object
+
+# ============================================
+# INFERENCE ENGINE (signals + mapping + next-question policy)
+# ============================================
+inference:
+
+  signals:
+    SignalDefinition:
+      required: [signal_id, signal_key, value_type]
+      fields:
+        signal_id: uuid
+        signal_key: string             # e.g., sector, licensed_financial_entity, processes_pci, hosting_model
+        value_type: enum(boolean, number, enum, multi-enum)
+        allowed_values: [string]?
+        description_en: string?
+        description_ar: string?
+        metadata: object
+
+  question_bank:
+    Question:
+      required: [question_id, question_code, label_en, label_ar, answer_type, required]
+      fields:
+        question_id: uuid
+        question_code: string
+        category: enum(org, licensing, data, it, security, governance, vendor, operations)
+        label_en: string
+        label_ar: string
+        help_en: string?
+        help_ar: string?
+        answer_type: enum(boolean, select, multi-select, number)
+        required: boolean
+        options_source: string?
+        difficulty_weight: float
+        information_gain_weight: float
+        metadata: object
+
+    QuestionOption:
+      required: [option_id, question_id, value, label_en, label_ar]
+      fields:
+        option_id: uuid
+        question_id: uuid
+        value: string
+        label_en: string
+        label_ar: string
+        description_en: string?
+        description_ar: string?
+        display_order: int
+        emits_signals: [RuleExpr]      # deterministic emission (answer -> signals)
+        metadata: object
+
+    QuestionSignalMapping:
+      required: [map_id, question_id, on_answer_emit]
+      fields:
+        map_id: uuid
+        question_id: uuid
+        on_answer_emit: [RuleExpr]     # normalization to stable signals
+        metadata: object
+
+  mapping_rules:
+    SignalToRegulatorRule:
+      required: [rule_id, if, confidence_weight]
+      fields:
+        rule_id: uuid
+        if: RuleExpr
+        add_regulators: [regulator_id]
+        remove_regulators: [regulator_id]
+        confidence_weight: float
+        reasons_en: [string]?
+        reasons_ar: [string]?
+        metadata: object
+
+    SignalToFrameworkRule:
+      required: [rule_id, if, confidence_weight]
+      fields:
+        rule_id: uuid
+        if: RuleExpr
+        add_framework_versions: [framework_version_id]
+        remove_framework_versions: [framework_version_id]
+        confidence_weight: float
+        reasons_en: [string]?
+        reasons_ar: [string]?
+        metadata: object
+
+    SignalToControlRule:
+      required: [rule_id, if, confidence_weight, set_applicability]
+      fields:
+        rule_id: uuid
+        if: RuleExpr
+        set_applicability:
+          control_ids: [control_id]
+          state: ControlState
+        confidence_weight: float
+        reasons_en: [string]?
+        reasons_ar: [string]?
+        metadata: object
+
+  next_question_policy:
+    NextQuestionPolicy:
+      required: [policy_id, objective, constraints, ranking_features, stop_conditions]
+      fields:
+        policy_id: uuid
+        objective: enum(maximize_controls_resolved, maximize_entropy_reduction, minimize_user_burden, hybrid)
+        constraints:
+          max_questions: int
+          max_time_minutes: int
+          no_free_text: boolean
+          allow_not_sure: boolean
+        ranking_features:
+          - info_gain
+          - controls_resolved
+          - regulator_uncertainty
+          - framework_uncertainty
+          - user_burden
+        stop_conditions:
+          - "confidence.regulators >= threshold"
+          - "confidence.frameworks >= threshold"
+          - "resolved_controls_percent >= target_percent"
+          - "max_questions reached"
+        metadata: object

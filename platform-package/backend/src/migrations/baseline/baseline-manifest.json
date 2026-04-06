@@ -1,0 +1,36 @@
+{
+  "baselineVersion": 257,
+  "generatedAt": "2026-03-17T00:26:05.696Z",
+  "generatorCommitSha": "6ef0a455d92b4baa017656cfe29c0d561070e4da",
+  "sourceReplayMode": "legacy-sequential",
+  "files": {
+    "masterSchema": {
+      "file": "master/001_master_schema_baseline.sql",
+      "checksum": "f568982f0876959c74208b4a5efd605ff1899b011d00b6b45f69538ba90805c1"
+    },
+    "masterSeed": {
+      "file": "master/002_master_reference_seed.sql",
+      "checksum": "036883c95f625e944826c6da5e6a28df176bba870b8937fcb364936703fad77f"
+    },
+    "tenantSchema": {
+      "file": "tenant/001_tenant_schema_baseline.sql",
+      "checksum": "db3fdc948f8580755377f8af80963d5c01098c6c64110f04383e9734395363cd"
+    },
+    "tenantSeed": {
+      "file": "tenant/002_tenant_reference_seed.sql",
+      "checksum": "d643e8ba0cc47cf0d3c1011062ce71f7e782e52e407f2efc73675279a3e7aa4a"
+    }
+  },
+  "counts": {
+    "masterTables": 307,
+    "masterViews": 14,
+    "masterFunctions": 180,
+    "masterIndexes": 882,
+    "masterSeedRows": 55,
+    "tenantTables": 759,
+    "tenantViews": 8,
+    "tenantFunctions": 3,
+    "tenantIndexes": 2608,
+    "tenantSeedRows": 215
+  }
+}

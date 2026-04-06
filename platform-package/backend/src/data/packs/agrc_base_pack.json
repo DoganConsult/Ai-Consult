@@ -1,0 +1,94 @@
+{
+  "packId": "agrc_base_pack",
+  "pack_key": "agrc_base_pack",
+  "pack_name": "AGRC Base Pack",
+  "version": "1.0.0",
+  "pack_type": "module_base",
+  "description": "Governance, Risk, Compliance and Audit seed data — frameworks, controls, workflows, and role definitions",
+  "dependencies": ["shared_base_pack"],
+  "compatibility": {
+    "min_platform_version": "1.0.0",
+    "required_modules": ["agrc"]
+  },
+  "frameworkRefs": ["NCA-ECC", "ISO27001", "PDPL"],
+  "artifacts": {
+    "controls": [],
+    "mappings": [],
+    "testProcedures": [],
+    "evidenceTemplates": []
+  },
+  "metadata": {
+    "publisher": "Shahin-AI",
+    "publishedAt": "2026-03-01",
+    "changelog": "AGRC base pack — governance, risk, compliance seed data",
+    "minPlatformVersion": "1.0.0"
+  },
+  "modules": {
+    "agrc": true,
+    "dataGovernance": false,
+    "privacyOps": false,
+    "vendorGovernance": false
+  },
+  "feature_flags": {
+    "enable_risk_scoring_advanced": true,
+    "enable_cross_framework_mapping": true,
+    "enable_evidence_vault": true
+  },
+  "limits_overrides": {},
+  "content_pack_refs": ["nca_ecc_pack", "pdpl_pack", "iso27001_pack"],
+  "seed_payload": {
+    "workspace_profile": {
+      "default_dashboard": "grc_executive",
+      "enforcement_mode": "advisory"
+    }
+  },
+  "role_pack": {
+    "roles": [
+      { "code": "grc_manager", "name_en": "GRC Manager", "name_ar": "مدير الحوكمة", "home_route": "/workspace-home", "permissions": ["compliance:*", "risks:*", "controls:*", "evidence:*", "policies:*"] },
+      { "code": "control_owner", "name_en": "Control Owner", "name_ar": "مالك الضابط", "home_route": "/controls", "permissions": ["controls:write", "evidence:write"] },
+      { "code": "risk_owner", "name_en": "Risk Owner", "name_ar": "مالك المخاطر", "home_route": "/risks", "permissions": ["risks:write", "controls:read"] }
+    ]
+  },
+  "dashboard_pack": {
+    "layouts": [
+      {
+        "code": "grc_executive",
+        "name_en": "GRC Executive Summary",
+        "name_ar": "ملخص الحوكمة التنفيذي",
+        "role_code": "admin",
+        "config": {
+          "widgets": ["compliance_score", "risk_heatmap", "policy_adoption", "audit_readiness", "controls_coverage", "evidence_freshness"]
+        }
+      }
+    ]
+  },
+  "workflow_pack": {
+    "templates": [
+      {
+        "code": "control_remediation",
+        "name_en": "Control Remediation",
+        "name_ar": "معالجة الضوابط",
+        "trigger_type": "event",
+        "steps": [
+          { "step_code": "identify_gap", "step_name": "Identify Gap", "assignee_role": "auditor" },
+          { "step_code": "assign_owner", "step_name": "Assign Owner", "assignee_role": "grc_manager" },
+          { "step_code": "remediate", "step_name": "Remediate", "assignee_role": "control_owner" },
+          { "step_code": "verify", "step_name": "Verify Fix", "assignee_role": "auditor" }
+        ]
+      },
+      {
+        "code": "incident_response",
+        "name_en": "Incident Response",
+        "name_ar": "الاستجابة للحوادث",
+        "trigger_type": "event",
+        "steps": [
+          { "step_code": "report", "step_name": "Report Incident", "assignee_role": "viewer" },
+          { "step_code": "triage", "step_name": "Triage", "assignee_role": "grc_manager" },
+          { "step_code": "investigate", "step_name": "Investigate", "assignee_role": "compliance_lead" },
+          { "step_code": "resolve", "step_name": "Resolve", "assignee_role": "admin" },
+          { "step_code": "post_mortem", "step_name": "Post-Mortem", "assignee_role": "grc_manager" }
+        ]
+      }
+    ]
+  }
+}

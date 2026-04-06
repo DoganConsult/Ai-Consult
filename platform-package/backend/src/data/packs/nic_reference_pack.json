@@ -1,0 +1,124 @@
+{
+  "packId": "nic_reference_pack",
+  "pack_key": "nic_reference_pack",
+  "pack_name": "NIC Reference Pack",
+  "version": "1.0.0",
+  "pack_type": "customer_reference",
+  "description": "NIC-tailored Government OS operating pack with sector-specific roles, dashboards, and NCA compliance workflows",
+  "dependencies": ["shared_base_pack", "agrc_base_pack"],
+  "compatibility": {
+    "min_platform_version": "1.0.0",
+    "required_modules": ["agrc"]
+  },
+  "frameworkRefs": ["NCA-ECC", "NCA-CSCC", "NCA-DCC"],
+  "artifacts": {
+    "controls": [],
+    "mappings": [],
+    "testProcedures": [],
+    "evidenceTemplates": []
+  },
+  "metadata": {
+    "publisher": "Shahin-AI",
+    "publishedAt": "2026-03-01",
+    "changelog": "NIC reference pack — National Information Center governance roles, dashboards, and workflows",
+    "minPlatformVersion": "1.0.0"
+  },
+  "modules": {
+    "agrc": true,
+    "qiyas": true,
+    "dataGovernance": true,
+    "privacyOps": true
+  },
+  "feature_flags": {
+    "enable_qiyas": true,
+    "enable_data_governance": true,
+    "enable_privacy_ops": true,
+    "enable_connector_center": true,
+    "enable_service_assurance": true
+  },
+  "limits_overrides": {
+    "max_users": 500,
+    "max_frameworks": 50,
+    "max_assessments": 200
+  },
+  "content_pack_refs": ["ksa_government_governance_pack", "nca_ecc_pack", "pdpl_pack", "qiyas_maturity_pack"],
+  "seed_payload": {
+    "workspace_profile": {
+      "industry": "Government",
+      "default_dashboard": "nic_executive",
+      "enforcement_mode": "advisory"
+    },
+    "default_workspaces": [
+      { "name": "Enterprise Governance", "type": "core" }
+    ]
+  },
+  "role_pack": {
+    "roles": [
+      { "code": "nic_ciso", "name_en": "CISO", "name_ar": "مسؤول أمن المعلومات", "home_route": "/workspace-home", "permissions": ["*"] },
+      { "code": "nic_compliance_officer", "name_en": "NIC Compliance Officer", "name_ar": "مسؤول الامتثال", "home_route": "/workspace-home", "permissions": ["compliance:*", "controls:*", "evidence:*", "policies:*"] },
+      { "code": "nic_data_steward", "name_en": "Data Steward", "name_ar": "أمين البيانات", "home_route": "/data-governance", "permissions": ["data_governance:*"] },
+      { "code": "nic_privacy_officer", "name_en": "Privacy Officer", "name_ar": "مسؤول الخصوصية", "home_route": "/privacy-ops", "permissions": ["privacy:*"] },
+      { "code": "nic_sector_auditor", "name_en": "Sector Auditor", "name_ar": "مدقق القطاع", "home_route": "/workspace-home", "permissions": ["audit:*", "controls:read", "evidence:read", "qiyas:read"] }
+    ]
+  },
+  "dashboard_pack": {
+    "layouts": [
+      {
+        "code": "nic_executive",
+        "name_en": "NIC Executive Dashboard",
+        "name_ar": "لوحة المركز الوطني التنفيذية",
+        "role_code": "nic_ciso",
+        "config": {
+          "widgets": ["compliance_score", "risk_heatmap", "nca_coverage", "controls_coverage", "evidence_freshness", "audit_readiness", "privacy_posture", "data_governance_score"]
+        }
+      },
+      {
+        "code": "nic_compliance",
+        "name_en": "NIC Compliance View",
+        "name_ar": "عرض الامتثال",
+        "role_code": "nic_compliance_officer",
+        "config": {
+          "widgets": ["nca_coverage", "controls_coverage", "overdue_tasks", "open_findings"]
+        }
+      },
+      {
+        "code": "nic_sector_audit",
+        "name_en": "Sector Audit View",
+        "name_ar": "عرض تدقيق القطاع",
+        "role_code": "nic_sector_auditor",
+        "config": {
+          "widgets": ["audit_readiness", "open_findings", "evidence_freshness", "qiyas_maturity"]
+        }
+      }
+    ]
+  },
+  "workflow_pack": {
+    "templates": [
+      {
+        "code": "nca_compliance_review",
+        "name_en": "NCA Compliance Review",
+        "name_ar": "مراجعة امتثال الهيئة",
+        "trigger_type": "scheduled",
+        "steps": [
+          { "step_code": "prepare", "step_name": "Prepare Evidence Package", "assignee_role": "nic_compliance_officer" },
+          { "step_code": "review_controls", "step_name": "Review Controls Status", "assignee_role": "nic_compliance_officer" },
+          { "step_code": "internal_audit", "step_name": "Internal Audit Check", "assignee_role": "nic_sector_auditor" },
+          { "step_code": "ciso_approval", "step_name": "CISO Approval", "assignee_role": "nic_ciso" },
+          { "step_code": "submit", "step_name": "Submit to NCA", "assignee_role": "nic_compliance_officer" }
+        ]
+      },
+      {
+        "code": "pdpl_dpia",
+        "name_en": "PDPL Data Protection Impact Assessment",
+        "name_ar": "تقييم أثر حماية البيانات",
+        "trigger_type": "manual",
+        "steps": [
+          { "step_code": "scope", "step_name": "Define Scope", "assignee_role": "nic_privacy_officer" },
+          { "step_code": "assess", "step_name": "Assess Risks", "assignee_role": "nic_privacy_officer" },
+          { "step_code": "mitigate", "step_name": "Define Mitigations", "assignee_role": "nic_data_steward" },
+          { "step_code": "approve", "step_name": "DPO Approval", "assignee_role": "nic_privacy_officer" }
+        ]
+      }
+    ]
+  }
+}

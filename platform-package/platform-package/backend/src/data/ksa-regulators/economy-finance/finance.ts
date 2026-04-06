@@ -1,0 +1,88 @@
+// ============================================
+// FINANCE & BANKING (8)
+// ============================================
+
+import { RegulatorDef } from "../ksa-frameworks";
+
+export const REGS_FINANCE: RegulatorDef[] = [
+  {
+    regulatorId: "REG-KSA-SAMA",
+    nameEn: "Saudi Central Bank",
+    nameAr: "البنك المركزي السعودي",
+    acronym: "SAMA",
+    category: "finance",
+    website: "https://sama.gov.sa",
+    mandateNote: "Financial sector regulator including banking, insurance, fintech",
+    sectors: ["SEC-KSA-FIN-BANK", "SEC-KSA-FIN-INS", "SEC-KSA-FIN-FINTECH"],
+  },
+  {
+    regulatorId: "REG-KSA-CMA",
+    nameEn: "Capital Market Authority",
+    nameAr: "هيئة السوق المالية",
+    acronym: "CMA",
+    category: "finance",
+    website: "https://cma.org.sa",
+    mandateNote: "Capital markets and securities regulation",
+    sectors: ["SEC-KSA-FIN-CAPITAL"],
+  },
+  {
+    regulatorId: "REG-KSA-CCHI",
+    nameEn: "Council of Cooperative Health Insurance",
+    nameAr: "مجلس الضمان الصحي التعاوني",
+    acronym: "CCHI",
+    category: "finance",
+    website: "https://cchi.gov.sa",
+    mandateNote: "Cooperative health insurance regulation and supervision",
+    sectors: ["SEC-KSA-FIN-INS", "SEC-KSA-HEALTH-HOSP"],
+  },
+  {
+    regulatorId: "REG-KSA-TADAWUL",
+    nameEn: "Saudi Exchange (Tadawul)",
+    nameAr: "تداول السعودية",
+    acronym: "TADAWUL",
+    category: "finance",
+    website: "https://www.saudiexchange.sa",
+    mandateNote: "Stock exchange listing and trading compliance",
+    sectors: ["SEC-KSA-FIN-CAPITAL"],
+  },
+  {
+    regulatorId: "REG-KSA-SMEA",
+    nameEn: "Small & Medium Enterprises Authority (Monsha'at)",
+    nameAr: "الهيئة العامة للمنشآت الصغيرة والمتوسطة",
+    acronym: "SMEA",
+    category: "finance",
+    website: "https://monshaat.gov.sa",
+    mandateNote: "SME regulation, licensing, and compliance facilitation",
+    sectors: ["SEC-KSA-FIN-FINTECH", "SEC-KSA-RETAIL"],
+  },
+  {
+    regulatorId: "REG-KSA-GOSI",
+    nameEn: "General Organization for Social Insurance",
+    nameAr: "المؤسسة العامة للتأمينات الاجتماعية",
+    acronym: "GOSI",
+    category: "finance",
+    website: "https://gosi.gov.sa",
+    mandateNote: "Social insurance, pension, and occupational hazards regulation",
+    sectors: ["all_commercial"],
+  },
+  {
+    regulatorId: "REG-KSA-PIF",
+    nameEn: "Public Investment Fund",
+    nameAr: "صندوق الاستثمارات العامة",
+    acronym: "PIF",
+    category: "finance",
+    website: "https://pif.gov.sa",
+    mandateNote: "Sovereign wealth fund governance and portfolio company oversight",
+    sectors: ["SEC-KSA-FIN-CAPITAL"],
+  },
+  {
+    regulatorId: "REG-KSA-SIDF",
+    nameEn: "Saudi Industrial Development Fund",
+    nameAr: "صندوق التنمية الصناعية السعودي",
+    acronym: "SIDF",
+    category: "finance",
+    website: "https://sidf.gov.sa",
+    mandateNote: "Industrial lending compliance and project financing standards",
+    sectors: ["SEC-KSA-INDUSTRY"],
+  },
+];

@@ -1,0 +1,14 @@
+export { GenericRow } from './db-rows.types';
+export type AiActionDecision = any;
+export type AiActionClass = any;
+export type AiAutonomyLevel = any;
+export type ArchetypeCode = any;
+export type ArchetypeResolutionInput = any;
+export type TenantBlueprint = any;
+export type BlueprintOverrides = any;
+export type BlueprintProvisionResult = any;
+export type FunctionalRoleBundle = any;
+export type FunctionalRoleBundleItem = any;
+export type PlatformRoleTenantRoleMap = any;
+export type PolicyDecisionLogEntry = any;
+export type ModuleActivationState = any;

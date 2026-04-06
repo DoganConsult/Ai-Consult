@@ -1,0 +1,72 @@
+{
+  "platform": {
+    "name": "dos-platform",
+    "version": "1.5.0",
+    "deploymentMode": "standalone"
+  },
+  "server": {
+    "port": 3010,
+    "trustProxy": false,
+    "compressionLevel": 6,
+    "bodyLimit": "10mb"
+  },
+  "database": {
+    "ssl": false,
+    "poolMin": 2,
+    "poolMax": 10,
+    "idleTimeoutMs": 30000,
+    "connectionTimeoutMs": 5000,
+    "statementTimeoutMs": 60000
+  },
+  "redis": {
+    "tls": false,
+    "maxRetriesPerRequest": 3,
+    "connectTimeoutMs": 10000
+  },
+  "auth": {
+    "jwtExpiresIn": "1h",
+    "jwtRefreshExpiresIn": "30d",
+    "csrfEnabled": true,
+    "mfaEnabled": false,
+    "passwordMinLength": 8,
+    "maxLoginAttempts": 10,
+    "lockoutDurationMs": 300000
+  },
+  "rateLimiting": {
+    "api": { "windowMs": 60000, "maxRequests": 1200 },
+    "auth": { "windowMs": 60000, "maxRequests": 120 },
+    "invitations": { "windowMs": 60000, "maxRequests": 50 }
+  },
+  "observability": {
+    "logLevel": "debug",
+    "otelEnabled": false,
+    "metricsEnabled": true,
+    "healthCheckIntervalMs": 30000
+  },
+  "storage": {
+    "mode": "local",
+    "path": "./data/storage",
+    "maxFileSizeMb": 100
+  },
+  "email": {
+    "secure": false,
+    "port": 1025,
+    "fromName": "DOS Platform [STAGING]",
+    "fromAddress": "noreply@localhost"
+  },
+  "security": {
+    "helmet": true,
+    "csp": false,
+    "hsts": false,
+    "frameguard": "deny",
+    "inputSanitization": true,
+    "corsOrigins": ["http://localhost:4200"]
+  },
+  "features": {
+    "clickhouse": false,
+    "temporal": false,
+    "aiProvider": "none",
+    "keyVault": false,
+    "vectorSearch": false
+  }
+}

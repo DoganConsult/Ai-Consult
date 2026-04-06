@@ -1,0 +1,904 @@
+-- Migration: Create missing tables for onboarding system
+-- Generated: 2026-03-02
+-- Purpose: Create all 33 missing tables identified in onboarding database audit
+
+-- ============================================================================
+-- SECTION 1: GOVERNANCE & WORKFLOW TABLES (5 tables)
+-- ============================================================================
+
+-- 1.1 Approval Chains
+CREATE TABLE IF NOT EXISTS public.approval_chains (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  workflow_type VARCHAR(100) NOT NULL,
+  chain_name VARCHAR(200) NOT NULL,
+  level_number INT NOT NULL,
+  approver_role VARCHAR(100),
+  approver_user_id VARCHAR(64) REFERENCES users(user_id),
+  approver_team_id UUID,
+  escalation_time_hours INT DEFAULT 48,
+  auto_approve BOOLEAN DEFAULT false,
+  conditions JSONB DEFAULT '{}',
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_approval_chain UNIQUE(tenant_id, workflow_type, chain_name, level_number)
+);
+
+CREATE INDEX IF NOT EXISTS idx_approval_chains_tenant ON public.approval_chains(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_approval_chains_workflow ON public.approval_chains(workflow_type);
+
+-- 1.2 Escalation Rules
+CREATE TABLE IF NOT EXISTS public.escalation_rules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  rule_type VARCHAR(50) NOT NULL, -- 'risk', 'incident', 'approval', 'audit'
+  rule_name VARCHAR(200) NOT NULL,
+  trigger_condition JSONB NOT NULL,
+  escalation_path JSONB NOT NULL, -- Array of escalation steps
+  notification_template TEXT,
+  max_escalation_level INT DEFAULT 5,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_escalation_rules_tenant ON public.escalation_rules(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_escalation_rules_type ON public.escalation_rules(rule_type);
+
+-- 1.3 Governance Config
+CREATE TABLE IF NOT EXISTS public.governance_config (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  config_key VARCHAR(100) NOT NULL,
+  config_value JSONB NOT NULL,
+  category VARCHAR(50), -- 'model', 'committee', 'reporting', 'approval'
+  description TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_governance_config UNIQUE(tenant_id, config_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_governance_config_tenant ON public.governance_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_governance_config_category ON public.governance_config(category);
+
+-- 1.4 Compliance Mappings (Public - shared across tenants)
+CREATE TABLE IF NOT EXISTS public.compliance_mappings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  source_framework VARCHAR(100) NOT NULL,
+  source_control_id VARCHAR(100) NOT NULL,
+  target_framework VARCHAR(100) NOT NULL,
+  target_control_id VARCHAR(100) NOT NULL,
+  mapping_type VARCHAR(50) DEFAULT 'equivalent', -- 'equivalent', 'partial', 'related'
+  confidence_score DECIMAL(3,2) DEFAULT 1.0,
+  notes TEXT,
+  is_verified BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_compliance_mappings_tenant ON public.compliance_mappings(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_compliance_mappings_source ON public.compliance_mappings(source_framework, source_control_id);
+CREATE INDEX IF NOT EXISTS idx_compliance_mappings_target ON public.compliance_mappings(target_framework, target_control_id);
+
+-- 1.5 Tenant Regulatory Profile
+CREATE TABLE IF NOT EXISTS public.tenant_regulatory_profile (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  primary_regulator VARCHAR(200),
+  license_number VARCHAR(100),
+  regulated_sector BOOLEAN DEFAULT false,
+  sector_classification VARCHAR(100),
+  required_frameworks TEXT[], -- Array of framework codes
+  reporting_obligations JSONB DEFAULT '[]',
+  audit_frequency VARCHAR(50),
+  last_regulatory_review DATE,
+  next_regulatory_review DATE,
+  compliance_officer_email VARCHAR(255),
+  privacy_officer_email VARCHAR(255),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_tenant_regulatory UNIQUE(tenant_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tenant_regulatory_tenant ON public.tenant_regulatory_profile(tenant_id);
+
+-- ============================================================================
+-- SECTION 2: RISK MANAGEMENT TABLES (5 tables)
+-- ============================================================================
+
+-- 2.1 Risk Criteria
+CREATE TABLE IF NOT EXISTS public.risk_criteria (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  criteria_type VARCHAR(50) NOT NULL, -- 'appetite', 'tolerance', 'threshold'
+  risk_category VARCHAR(100),
+  risk_appetite VARCHAR(50), -- 'minimal', 'low', 'moderate', 'high', 'aggressive'
+  methodology VARCHAR(100), -- 'ISO31000', 'COSO', 'FAIR', 'custom'
+  impact_scale INT DEFAULT 5,
+  likelihood_scale INT DEFAULT 5,
+  risk_matrix JSONB,
+  scoring_formula TEXT,
+  thresholds JSONB DEFAULT '{}',
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_risk_criteria_tenant ON public.risk_criteria(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_risk_criteria_type ON public.risk_criteria(criteria_type);
+
+-- 2.2 KRI Config
+CREATE TABLE IF NOT EXISTS public.kri_config (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  kri_code VARCHAR(100) NOT NULL,
+  kri_name VARCHAR(200) NOT NULL,
+  description TEXT,
+  risk_category VARCHAR(100),
+  measurement_type VARCHAR(50), -- 'percentage', 'count', 'ratio', 'currency'
+  calculation_formula TEXT,
+  data_source VARCHAR(200),
+  collection_frequency VARCHAR(50),
+  threshold_green DECIMAL,
+  threshold_amber DECIMAL,
+  threshold_red DECIMAL,
+  current_value DECIMAL,
+  last_measured_at TIMESTAMPTZ,
+  owner_email VARCHAR(255),
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_kri_config UNIQUE(tenant_id, kri_code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_kri_config_tenant ON public.kri_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_kri_config_category ON public.kri_config(risk_category);
+
+-- 2.3 Exception Management
+CREATE TABLE IF NOT EXISTS public.exception_management (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  exception_type VARCHAR(50) NOT NULL, -- 'control', 'policy', 'compliance'
+  reference_id VARCHAR(200) NOT NULL, -- Control ID, Policy ID, etc.
+  exception_reason TEXT NOT NULL,
+  risk_acceptance BOOLEAN DEFAULT false,
+  compensating_controls TEXT,
+  requested_by VARCHAR(255) NOT NULL,
+  approved_by VARCHAR(255),
+  approval_date DATE,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'approved', 'rejected', 'expired'
+  review_frequency VARCHAR(50),
+  last_review_date DATE,
+  next_review_date DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_exception_mgmt_tenant ON public.exception_management(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_exception_mgmt_status ON public.exception_management(status);
+CREATE INDEX IF NOT EXISTS idx_exception_mgmt_dates ON public.exception_management(end_date);
+
+-- 2.4 Incident Categories
+CREATE TABLE IF NOT EXISTS public.incident_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  category_code VARCHAR(100) NOT NULL,
+  category_name VARCHAR(200) NOT NULL,
+  parent_category VARCHAR(100),
+  severity_levels JSONB DEFAULT '["low","medium","high","critical"]',
+  sla_hours JSONB DEFAULT '{"low": 72, "medium": 24, "high": 4, "critical": 1}',
+  escalation_required BOOLEAN DEFAULT false,
+  notification_list TEXT[],
+  response_template TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_incident_category UNIQUE(tenant_id, category_code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_incident_categories_tenant ON public.incident_categories(tenant_id);
+
+-- 2.5 BCP Config
+CREATE TABLE IF NOT EXISTS public.bcp_config (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  config_type VARCHAR(50) NOT NULL, -- 'rto', 'rpo', 'mtd', 'mbco'
+  business_function VARCHAR(200) NOT NULL,
+  criticality_tier VARCHAR(50), -- 'critical', 'essential', 'necessary', 'desirable'
+  rto_hours INT, -- Recovery Time Objective
+  rpo_hours INT, -- Recovery Point Objective
+  mtd_hours INT, -- Maximum Tolerable Downtime
+  dependencies JSONB DEFAULT '[]',
+  recovery_strategy TEXT,
+  alternate_procedures TEXT,
+  responsible_team VARCHAR(200),
+  last_tested DATE,
+  next_test_date DATE,
+  test_results JSONB,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_bcp_config_tenant ON public.bcp_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_bcp_config_criticality ON public.bcp_config(criticality_tier);
+
+-- ============================================================================
+-- SECTION 3: ORGANIZATIONAL STRUCTURE TABLES (5 tables)
+-- ============================================================================
+
+-- 3.1 Organization Units
+CREATE TABLE IF NOT EXISTS public.organization_units (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  unit_code VARCHAR(100) NOT NULL,
+  unit_name VARCHAR(200) NOT NULL,
+  unit_type VARCHAR(50) NOT NULL, -- 'division', 'department', 'team', 'branch', 'subsidiary'
+  parent_unit_id UUID REFERENCES organization_units(id),
+  unit_head_email VARCHAR(255),
+  location VARCHAR(200),
+  cost_center VARCHAR(50),
+  employee_count INT,
+  is_grc_critical BOOLEAN DEFAULT false,
+  attributes JSONB DEFAULT '{}',
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_org_unit UNIQUE(tenant_id, unit_code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_org_units_tenant ON public.organization_units(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_org_units_parent ON public.organization_units(parent_unit_id);
+CREATE INDEX IF NOT EXISTS idx_org_units_type ON public.organization_units(unit_type);
+
+-- 3.2 Org Hierarchy
+CREATE TABLE IF NOT EXISTS public.org_hierarchy (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  child_unit_id UUID NOT NULL REFERENCES organization_units(id),
+  parent_unit_id UUID NOT NULL REFERENCES organization_units(id),
+  hierarchy_level INT NOT NULL,
+  reporting_type VARCHAR(50), -- 'direct', 'dotted', 'matrix'
+  effective_from DATE,
+  effective_to DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_org_hierarchy UNIQUE(tenant_id, child_unit_id, parent_unit_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_org_hierarchy_tenant ON public.org_hierarchy(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_org_hierarchy_child ON public.org_hierarchy(child_unit_id);
+CREATE INDEX IF NOT EXISTS idx_org_hierarchy_parent ON public.org_hierarchy(parent_unit_id);
+
+-- 3.3 Department Roles
+CREATE TABLE IF NOT EXISTS public.department_roles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  department_id UUID NOT NULL REFERENCES organization_units(id),
+  role_type VARCHAR(100) NOT NULL, -- 'risk_owner', 'control_owner', 'process_owner'
+  framework_responsibilities TEXT[],
+  control_domains TEXT[],
+  risk_categories TEXT[],
+  primary_contact_email VARCHAR(255),
+  backup_contact_email VARCHAR(255),
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_dept_roles_tenant ON public.department_roles(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_dept_roles_dept ON public.department_roles(department_id);
+
+-- 3.4 Role Function Map (moved to public for shared access)
+CREATE TABLE IF NOT EXISTS public.role_function_map (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  role_id VARCHAR(100) NOT NULL,
+  function_code VARCHAR(100) NOT NULL,
+  permission_level VARCHAR(50), -- 'read', 'write', 'approve', 'admin'
+  is_responsible BOOLEAN DEFAULT false, -- RACI - R
+  is_accountable BOOLEAN DEFAULT false, -- RACI - A
+  is_consulted BOOLEAN DEFAULT false,   -- RACI - C
+  is_informed BOOLEAN DEFAULT false,    -- RACI - I
+  can_delegate BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_role_function UNIQUE(tenant_id, role_id, function_code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_role_function_tenant ON public.role_function_map(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_role_function_role ON public.role_function_map(role_id);
+
+-- 3.5 RACI Config
+CREATE TABLE IF NOT EXISTS public.raci_config (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  process_name VARCHAR(200) NOT NULL,
+  activity_name VARCHAR(200) NOT NULL,
+  responsible_role VARCHAR(100),
+  accountable_role VARCHAR(100),
+  consulted_roles TEXT[],
+  informed_roles TEXT[],
+  automation_level VARCHAR(50), -- 'manual', 'semi-automated', 'automated'
+  frequency VARCHAR(50),
+  documentation_link TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_raci_config_tenant ON public.raci_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_raci_config_process ON public.raci_config(process_name);
+
+-- ============================================================================
+-- SECTION 4: AUDIT & EVIDENCE TABLES (5 tables)
+-- ============================================================================
+
+-- 4.1 Audit Findings
+CREATE TABLE IF NOT EXISTS public.audit_findings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  audit_id VARCHAR(100) NOT NULL,
+  finding_ref VARCHAR(100) NOT NULL,
+  audit_type VARCHAR(50), -- 'internal', 'external', 'regulatory'
+  auditor_name VARCHAR(200),
+  audit_date DATE,
+  finding_title TEXT NOT NULL,
+  finding_description TEXT,
+  severity VARCHAR(50), -- 'critical', 'high', 'medium', 'low', 'observation'
+  affected_areas TEXT[],
+  root_cause TEXT,
+  management_response TEXT,
+  remediation_plan TEXT,
+  responsible_person VARCHAR(255),
+  target_date DATE,
+  status VARCHAR(50) DEFAULT 'open', -- 'open', 'in_progress', 'closed', 'verified'
+  evidence_refs TEXT[],
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_audit_finding UNIQUE(tenant_id, audit_id, finding_ref)
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_findings_tenant ON public.audit_findings(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_audit_findings_status ON public.audit_findings(status);
+CREATE INDEX IF NOT EXISTS idx_audit_findings_severity ON public.audit_findings(severity);
+
+-- 4.2 Audit Schedules
+CREATE TABLE IF NOT EXISTS public.audit_schedules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  schedule_year INT NOT NULL,
+  audit_name VARCHAR(200) NOT NULL,
+  audit_type VARCHAR(50), -- 'internal', 'external', 'certification', 'regulatory'
+  audit_scope TEXT,
+  frameworks_covered TEXT[],
+  planned_start_date DATE,
+  planned_end_date DATE,
+  actual_start_date DATE,
+  actual_end_date DATE,
+  lead_auditor VARCHAR(255),
+  audit_team TEXT[],
+  status VARCHAR(50) DEFAULT 'planned', -- 'planned', 'in_progress', 'completed', 'cancelled'
+  report_link TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_schedules_tenant ON public.audit_schedules(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_audit_schedules_year ON public.audit_schedules(schedule_year);
+CREATE INDEX IF NOT EXISTS idx_audit_schedules_status ON public.audit_schedules(status);
+
+-- 4.3 Evidence Config
+CREATE TABLE IF NOT EXISTS public.evidence_config (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  evidence_type VARCHAR(100) NOT NULL,
+  evidence_name VARCHAR(200) NOT NULL,
+  description TEXT,
+  collection_method VARCHAR(50), -- 'manual', 'automated', 'api', 'screenshot'
+  collection_frequency VARCHAR(50),
+  retention_days INT DEFAULT 365,
+  storage_location VARCHAR(200),
+  file_naming_pattern VARCHAR(200),
+  required_attributes JSONB DEFAULT '[]',
+  validation_rules JSONB DEFAULT '[]',
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_evidence_config UNIQUE(tenant_id, evidence_type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_evidence_config_tenant ON public.evidence_config(tenant_id);
+
+-- 4.4 Scan Schedules
+CREATE TABLE IF NOT EXISTS public.scan_schedules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  scan_type VARCHAR(100) NOT NULL, -- 'vulnerability', 'compliance', 'penetration', 'code'
+  scan_name VARCHAR(200) NOT NULL,
+  target_systems TEXT[],
+  scan_tool VARCHAR(100),
+  frequency VARCHAR(50), -- 'daily', 'weekly', 'monthly', 'quarterly'
+  cron_expression VARCHAR(100),
+  last_run_date TIMESTAMPTZ,
+  next_run_date TIMESTAMPTZ,
+  last_findings_count INT,
+  severity_distribution JSONB,
+  notification_list TEXT[],
+  auto_ticket_creation BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_scan_schedules_tenant ON public.scan_schedules(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_scan_schedules_type ON public.scan_schedules(scan_type);
+CREATE INDEX IF NOT EXISTS idx_scan_schedules_next ON public.scan_schedules(next_run_date);
+
+-- 4.5 Training Schedules
+CREATE TABLE IF NOT EXISTS public.training_schedules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  training_name VARCHAR(200) NOT NULL,
+  training_type VARCHAR(50), -- 'awareness', 'technical', 'compliance', 'phishing'
+  description TEXT,
+  target_audience TEXT[],
+  delivery_method VARCHAR(50), -- 'online', 'classroom', 'webinar', 'self-paced'
+  duration_hours DECIMAL(5,2),
+  frequency VARCHAR(50),
+  last_conducted DATE,
+  next_scheduled DATE,
+  completion_rate DECIMAL(5,2),
+  passing_score INT,
+  certificate_required BOOLEAN DEFAULT false,
+  compliance_frameworks TEXT[],
+  training_provider VARCHAR(200),
+  is_mandatory BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_training_schedules_tenant ON public.training_schedules(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_training_schedules_type ON public.training_schedules(training_type);
+CREATE INDEX IF NOT EXISTS idx_training_schedules_next ON public.training_schedules(next_scheduled);
+
+-- ============================================================================
+-- SECTION 5: VENDOR & DATA GOVERNANCE TABLES (3 tables)
+-- ============================================================================
+
+-- 5.1 Vendor Assessments
+CREATE TABLE IF NOT EXISTS public.vendor_assessments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  vendor_id VARCHAR(200) NOT NULL,
+  vendor_name VARCHAR(200) NOT NULL,
+  assessment_type VARCHAR(50), -- 'initial', 'periodic', 'event-driven'
+  assessment_date DATE,
+  risk_rating VARCHAR(50), -- 'critical', 'high', 'medium', 'low'
+  criticality_tier VARCHAR(50),
+  services_provided TEXT[],
+  data_access_level VARCHAR(50),
+  compliance_certifications TEXT[],
+  sla_met BOOLEAN,
+  issues_identified TEXT[],
+  remediation_required BOOLEAN DEFAULT false,
+  next_assessment_date DATE,
+  assessment_report_link TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_vendor_assessments_tenant ON public.vendor_assessments(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_vendor_assessments_vendor ON public.vendor_assessments(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_vendor_assessments_risk ON public.vendor_assessments(risk_rating);
+
+-- 5.2 Data Classifications
+CREATE TABLE IF NOT EXISTS public.data_classifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  classification_level VARCHAR(50) NOT NULL, -- 'public', 'internal', 'confidential', 'restricted'
+  level_name VARCHAR(100) NOT NULL,
+  description TEXT,
+  handling_requirements TEXT,
+  encryption_required BOOLEAN DEFAULT false,
+  access_controls TEXT,
+  retention_period_days INT,
+  disposal_method VARCHAR(100),
+  data_types TEXT[],
+  applicable_regulations TEXT[],
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_data_classification UNIQUE(tenant_id, classification_level)
+);
+
+CREATE INDEX IF NOT EXISTS idx_data_classifications_tenant ON public.data_classifications(tenant_id);
+
+-- 5.3 Data Governance Config
+CREATE TABLE IF NOT EXISTS public.data_governance_config (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  config_area VARCHAR(100) NOT NULL, -- 'privacy', 'retention', 'quality', 'lineage'
+  config_key VARCHAR(200) NOT NULL,
+  config_value JSONB NOT NULL,
+  applicable_systems TEXT[],
+  responsible_role VARCHAR(100),
+  review_frequency VARCHAR(50),
+  last_reviewed DATE,
+  next_review DATE,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_data_gov_config UNIQUE(tenant_id, config_area, config_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_data_gov_config_tenant ON public.data_governance_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_data_gov_config_area ON public.data_governance_config(config_area);
+
+-- ============================================================================
+-- SECTION 6: SYSTEM CONFIGURATION TABLES (6 tables)
+-- ============================================================================
+
+-- 6.1 Tenant Settings
+CREATE TABLE IF NOT EXISTS public.tenant_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  setting_category VARCHAR(100) NOT NULL,
+  setting_key VARCHAR(200) NOT NULL,
+  setting_value JSONB NOT NULL,
+  setting_type VARCHAR(50), -- 'string', 'number', 'boolean', 'json', 'array'
+  is_encrypted BOOLEAN DEFAULT false,
+  description TEXT,
+  is_user_configurable BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_by VARCHAR(255),
+  CONSTRAINT uk_tenant_setting UNIQUE(tenant_id, setting_category, setting_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tenant_settings_tenant ON public.tenant_settings(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_tenant_settings_category ON public.tenant_settings(setting_category);
+
+-- 6.2 Tenant SSO Config
+CREATE TABLE IF NOT EXISTS public.tenant_sso_config (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  provider_type VARCHAR(50) NOT NULL, -- 'saml', 'oauth', 'oidc', 'ldap'
+  provider_name VARCHAR(100) NOT NULL,
+  idp_url TEXT,
+  client_id VARCHAR(200),
+  client_secret TEXT, -- Should be encrypted
+  certificate TEXT,
+  metadata_url TEXT,
+  attribute_mapping JSONB DEFAULT '{}',
+  group_mapping JSONB DEFAULT '{}',
+  auto_provision_users BOOLEAN DEFAULT false,
+  default_role VARCHAR(100),
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_tenant_sso UNIQUE(tenant_id, provider_type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tenant_sso_tenant ON public.tenant_sso_config(tenant_id);
+
+-- 6.3 Migration Config
+CREATE TABLE IF NOT EXISTS public.migration_config (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  migration_type VARCHAR(100) NOT NULL, -- 'data', 'user', 'framework', 'control'
+  source_system VARCHAR(200),
+  mapping_rules JSONB DEFAULT '{}',
+  transformation_scripts TEXT,
+  validation_rules JSONB DEFAULT '[]',
+  last_migration_date TIMESTAMPTZ,
+  migration_status VARCHAR(50),
+  records_migrated INT,
+  records_failed INT,
+  error_log TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_migration_config_tenant ON public.migration_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_migration_config_type ON public.migration_config(migration_type);
+
+-- 6.4 Integrations
+CREATE TABLE IF NOT EXISTS public.integrations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  integration_type VARCHAR(100) NOT NULL, -- 'siem', 'ticketing', 'cmdb', 'vuln_scanner'
+  integration_name VARCHAR(200) NOT NULL,
+  provider VARCHAR(100),
+  connection_config JSONB DEFAULT '{}', -- Should encrypt sensitive fields
+  sync_frequency VARCHAR(50),
+  last_sync_date TIMESTAMPTZ,
+  next_sync_date TIMESTAMPTZ,
+  sync_status VARCHAR(50),
+  data_mapping JSONB DEFAULT '{}',
+  is_bidirectional BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_integration UNIQUE(tenant_id, integration_type, integration_name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_integrations_tenant ON public.integrations(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_integrations_type ON public.integrations(integration_type);
+
+-- 6.5 Maturity Assessments
+CREATE TABLE IF NOT EXISTS public.maturity_assessments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  assessment_name VARCHAR(200) NOT NULL,
+  assessment_type VARCHAR(100), -- 'cmmi', 'iso', 'custom'
+  assessment_date DATE,
+  overall_level VARCHAR(50),
+  domain_scores JSONB DEFAULT '{}',
+  strengths TEXT[],
+  weaknesses TEXT[],
+  recommendations TEXT[],
+  improvement_plan TEXT,
+  next_assessment_date DATE,
+  assessor_name VARCHAR(255),
+  assessment_report_link TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_maturity_assessments_tenant ON public.maturity_assessments(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_maturity_assessments_date ON public.maturity_assessments(assessment_date);
+
+-- 6.6 User Roles (Public for cross-tenant management)
+CREATE TABLE IF NOT EXISTS public.user_roles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id VARCHAR(16) NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+  user_id VARCHAR(64) NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  role_code VARCHAR(100) NOT NULL,
+  assigned_by VARCHAR(255),
+  assigned_date TIMESTAMPTZ DEFAULT NOW(),
+  valid_from DATE,
+  valid_to DATE,
+  is_temporary BOOLEAN DEFAULT false,
+  delegation_from VARCHAR(64) REFERENCES users(user_id),
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_user_role UNIQUE(tenant_id, user_id, role_code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_roles_tenant ON public.user_roles(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_user ON public.user_roles(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_role ON public.user_roles(role_code);
+
+-- ============================================================================
+-- SECTION 7: TEAM FUNCTION LOOKUP TABLES (4 tables)
+-- ============================================================================
+
+-- 7.1 Team Functions Lookup
+CREATE TABLE IF NOT EXISTS public.lookup_team_functions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  function_code VARCHAR(100) NOT NULL UNIQUE,
+  function_name_en VARCHAR(200) NOT NULL,
+  function_name_ar VARCHAR(200),
+  description_en TEXT,
+  description_ar TEXT,
+  typical_size_min INT,
+  typical_size_max INT,
+  is_grc_critical BOOLEAN DEFAULT false,
+  required_for_sectors TEXT[],
+  sort_order INT DEFAULT 0,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.lookup_team_functions ADD COLUMN IF NOT EXISTS typical_size_min INT;
+ALTER TABLE public.lookup_team_functions ADD COLUMN IF NOT EXISTS typical_size_max INT;
+ALTER TABLE public.lookup_team_functions ADD COLUMN IF NOT EXISTS is_grc_critical BOOLEAN DEFAULT false;
+ALTER TABLE public.lookup_team_functions ADD COLUMN IF NOT EXISTS required_for_sectors TEXT[];
+ALTER TABLE public.lookup_team_functions ALTER COLUMN category SET DEFAULT 'general';
+DO $$ BEGIN ALTER TABLE public.lookup_team_functions ALTER COLUMN category DROP NOT NULL; EXCEPTION WHEN others THEN NULL; END $$;
+
+-- Insert standard GRC team functions
+INSERT INTO public.lookup_team_functions (function_code, function_name_en, function_name_ar, description_en, is_grc_critical, typical_size_min, typical_size_max, sort_order) VALUES
+('soc', 'Security Operations Center', 'مركز عمليات الأمن', 'Monitor and respond to security incidents', true, 3, 20, 1),
+('risk_mgmt', 'Risk Management', 'إدارة المخاطر', 'Enterprise risk assessment and management', true, 2, 10, 2),
+('compliance', 'Compliance & Regulatory', 'الامتثال والتنظيم', 'Regulatory compliance and audit management', true, 2, 15, 3),
+('internal_audit', 'Internal Audit', 'المراجعة الداخلية', 'Independent audit and assurance', true, 2, 10, 4),
+('cyber_policy', 'Cybersecurity Policy & Governance', 'سياسة وحوكمة الأمن السيبراني', 'Security policy and standards management', true, 1, 5, 5),
+('threat_intel', 'Threat Intelligence', 'الاستخبارات التهديدية', 'Threat monitoring and intelligence analysis', true, 2, 8, 6),
+('vuln_mgmt', 'Vulnerability Management', 'إدارة الثغرات', 'Vulnerability scanning and remediation', true, 2, 6, 7),
+('iam', 'Identity & Access Management', 'إدارة الهوية والوصول', 'User provisioning and access control', true, 2, 8, 8),
+('bcp_dr', 'Business Continuity & DR', 'استمرارية الأعمال', 'Business continuity and disaster recovery', true, 2, 6, 9),
+('vendor_risk', 'Third-Party Risk Management', 'إدارة مخاطر الأطراف الثالثة', 'Vendor and supply chain risk', true, 1, 5, 10),
+('data_privacy', 'Data Privacy & Protection', 'خصوصية وحماية البيانات', 'Data protection and privacy compliance', true, 1, 5, 11),
+('security_arch', 'Security Architecture', 'هندسة الأمن', 'Security design and architecture', true, 2, 8, 12),
+('awareness', 'Security Awareness & Training', 'التوعية والتدريب الأمني', 'Security training and phishing programs', false, 1, 3, 13),
+('legal', 'Legal & Regulatory Affairs', 'الشؤون القانونية والتنظيمية', 'Legal compliance and regulatory liaison', false, 1, 5, 14),
+('pmo', 'Project Management Office', 'مكتب إدارة المشاريع', 'GRC project and program management', false, 2, 8, 15),
+('sector_coord', 'Sector Coordination', 'تنسيق القطاع', 'Cross-sector collaboration and guidance', false, 1, 4, 16),
+('fraud', 'Fraud & Financial Crime', 'مكافحة الاحتيال', 'Fraud detection and prevention', true, 2, 10, 17),
+('forensics', 'Digital Forensics & Investigation', 'الطب الشرعي الرقمي', 'Incident investigation and forensics', true, 1, 5, 18),
+('cloud_security', 'Cloud Security', 'أمن السحابة', 'Cloud infrastructure security', true, 1, 6, 19),
+('devsecops', 'DevSecOps', 'ديف سيك أوبس', 'Secure development and deployment', true, 2, 8, 20)
+ON CONFLICT (function_code) DO NOTHING;
+
+-- 7.2 Team to Control Mapping
+CREATE TABLE IF NOT EXISTS public.lookup_team_control_mapping (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  team_function_code VARCHAR(100) NOT NULL,
+  control_domain VARCHAR(200) NOT NULL,
+  framework VARCHAR(100),
+  is_primary BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_team_control_map UNIQUE(team_function_code, control_domain, framework)
+);
+
+ALTER TABLE public.lookup_team_control_mapping ADD COLUMN IF NOT EXISTS team_function_code VARCHAR(100);
+ALTER TABLE public.lookup_team_control_mapping ADD COLUMN IF NOT EXISTS framework VARCHAR(100);
+ALTER TABLE public.lookup_team_control_mapping ADD COLUMN IF NOT EXISTS is_primary BOOLEAN DEFAULT false;
+DO $$ BEGIN
+  UPDATE public.lookup_team_control_mapping SET team_function_code = function_code WHERE team_function_code IS NULL AND function_code IS NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL;
+END $$;
+DO $$ BEGIN ALTER TABLE public.lookup_team_control_mapping ALTER COLUMN function_code DROP NOT NULL; EXCEPTION WHEN others THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE public.lookup_team_control_mapping ALTER COLUMN control_domain_en DROP NOT NULL; EXCEPTION WHEN others THEN NULL; END $$;
+
+-- Insert mappings
+INSERT INTO public.lookup_team_control_mapping (team_function_code, control_domain, framework, is_primary) VALUES
+('soc', 'Incident Response', 'NCA-ECC', true),
+('soc', 'Security Monitoring', 'NCA-ECC', true),
+('soc', 'Threat Detection', 'ISO27001', true),
+('risk_mgmt', 'Risk Assessment', 'ISO31000', true),
+('risk_mgmt', 'Risk Treatment', 'COSO', true),
+('compliance', 'Compliance Management', 'NCA-ECC', true),
+('compliance', 'Regulatory Reporting', 'SAMA-CSF', true),
+('internal_audit', 'Audit Management', 'ISO19011', true),
+('iam', 'Access Control', 'NCA-ECC', true),
+('iam', 'Identity Management', 'ISO27001', true),
+('bcp_dr', 'Business Continuity', 'ISO22301', true),
+('bcp_dr', 'Disaster Recovery', 'NCA-ECC', true),
+('vendor_risk', 'Third-Party Management', 'NCA-ECC', true),
+('data_privacy', 'Data Protection', 'PDPL', true),
+('data_privacy', 'Privacy Management', 'GDPR', true)
+ON CONFLICT DO NOTHING;
+
+-- 7.3 Team to Framework Mapping
+CREATE TABLE IF NOT EXISTS public.lookup_team_framework_mapping (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  team_function_code VARCHAR(100) NOT NULL,
+  framework_code VARCHAR(100) NOT NULL,
+  framework_section VARCHAR(200),
+  responsibility_level VARCHAR(50), -- 'primary', 'secondary', 'supporting'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_team_framework_map UNIQUE(team_function_code, framework_code, framework_section)
+);
+
+-- 7.4 Sector Team Templates
+CREATE TABLE IF NOT EXISTS public.lookup_sector_team_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sector_code VARCHAR(100) NOT NULL,
+  team_function_code VARCHAR(100) NOT NULL,
+  is_mandatory BOOLEAN DEFAULT false,
+  is_recommended BOOLEAN DEFAULT true,
+  minimum_size INT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT uk_sector_team_template UNIQUE(sector_code, team_function_code)
+);
+
+ALTER TABLE public.lookup_sector_team_templates ADD COLUMN IF NOT EXISTS team_function_code VARCHAR(100);
+ALTER TABLE public.lookup_sector_team_templates ADD COLUMN IF NOT EXISTS is_mandatory BOOLEAN DEFAULT false;
+ALTER TABLE public.lookup_sector_team_templates ADD COLUMN IF NOT EXISTS is_recommended BOOLEAN DEFAULT true;
+ALTER TABLE public.lookup_sector_team_templates ADD COLUMN IF NOT EXISTS minimum_size INT;
+ALTER TABLE public.lookup_sector_team_templates ADD COLUMN IF NOT EXISTS notes TEXT;
+DO $$ BEGIN
+  UPDATE public.lookup_sector_team_templates SET team_function_code = function_code WHERE team_function_code IS NULL AND function_code IS NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL;
+END $$;
+DO $$ BEGIN ALTER TABLE public.lookup_sector_team_templates ALTER COLUMN function_code DROP NOT NULL; EXCEPTION WHEN others THEN NULL; END $$;
+
+-- Insert sector-specific team recommendations
+INSERT INTO public.lookup_sector_team_templates (sector_code, team_function_code, is_mandatory, is_recommended, minimum_size) VALUES
+-- Banking sector
+('banking', 'soc', true, true, 5),
+('banking', 'fraud', true, true, 3),
+('banking', 'compliance', true, true, 3),
+('banking', 'risk_mgmt', true, true, 3),
+('banking', 'internal_audit', true, true, 2),
+('banking', 'vendor_risk', true, true, 2),
+-- Government sector
+('government', 'soc', true, true, 5),
+('government', 'cyber_policy', true, true, 2),
+('government', 'sector_coord', true, true, 2),
+('government', 'compliance', true, true, 3),
+-- Healthcare sector
+('healthcare', 'data_privacy', true, true, 2),
+('healthcare', 'compliance', true, true, 2),
+('healthcare', 'bcp_dr', true, true, 2),
+-- Technology sector
+('technology', 'devsecops', true, true, 3),
+('technology', 'cloud_security', true, true, 2),
+('technology', 'security_arch', true, true, 2)
+ON CONFLICT DO NOTHING;
+
+-- ============================================================================
+-- Create update trigger function for updated_at
+-- ============================================================================
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Apply update trigger to all tables with updated_at column
+DO $$
+DECLARE
+    t text;
+BEGIN
+    FOR t IN
+        SELECT table_name
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        AND column_name = 'updated_at'
+        AND (
+            table_name LIKE '%approval_chains%'
+           OR table_name LIKE '%escalation_rules%'
+           OR table_name LIKE '%governance_config%'
+           OR table_name LIKE '%compliance_mappings%'
+           OR table_name LIKE '%tenant_regulatory_profile%'
+           OR table_name LIKE '%risk_criteria%'
+           OR table_name LIKE '%kri_config%'
+           OR table_name LIKE '%exception_management%'
+           OR table_name LIKE '%incident_categories%'
+           OR table_name LIKE '%bcp_config%'
+           OR table_name LIKE '%organization_units%'
+           OR table_name LIKE '%department_roles%'
+           OR table_name LIKE '%role_function_map%'
+           OR table_name LIKE '%raci_config%'
+           OR table_name LIKE '%audit_findings%'
+           OR table_name LIKE '%audit_schedules%'
+           OR table_name LIKE '%evidence_config%'
+           OR table_name LIKE '%scan_schedules%'
+           OR table_name LIKE '%training_schedules%'
+           OR table_name LIKE '%vendor_assessments%'
+           OR table_name LIKE '%data_classifications%'
+           OR table_name LIKE '%data_governance_config%'
+           OR table_name LIKE '%tenant_settings%'
+           OR table_name LIKE '%tenant_sso_config%'
+           OR table_name LIKE '%migration_config%'
+           OR table_name LIKE '%integrations%'
+           OR table_name LIKE '%maturity_assessments%'
+           OR table_name LIKE '%user_roles%'
+        )
+    LOOP
+        EXECUTE format('DROP TRIGGER IF EXISTS update_%I_updated_at ON public.%I', t, t);
+        EXECUTE format('CREATE TRIGGER update_%I_updated_at BEFORE UPDATE ON public.%I FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()', t, t);
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================================================
+-- Grant permissions
+-- ============================================================================
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO shahin;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO shahin;
+
+-- ============================================================================
+-- Add comments for documentation
+-- ============================================================================
+COMMENT ON TABLE public.approval_chains IS 'Stores approval workflow hierarchies and escalation paths for various processes';
+COMMENT ON TABLE public.risk_criteria IS 'Risk assessment criteria, appetite, and scoring methodology configuration';
+COMMENT ON TABLE public.organization_units IS 'Organizational structure including departments, divisions, branches, and subsidiaries';
+COMMENT ON TABLE public.tenant_regulatory_profile IS 'Regulatory compliance profile and requirements for each tenant';
+COMMENT ON TABLE public.lookup_team_functions IS 'Standard GRC team function types and their typical characteristics';
+
+-- End of migration

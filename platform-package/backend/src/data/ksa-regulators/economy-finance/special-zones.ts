@@ -1,0 +1,88 @@
+// ============================================
+// SPECIAL ECONOMIC ZONES & MEGA PROJECTS (8)
+// ============================================
+
+import { RegulatorDef } from "../ksa-frameworks";
+
+export const REGS_SPECIAL_ZONES: RegulatorDef[] = [
+  {
+    regulatorId: "REG-KSA-NEOM",
+    nameEn: "NEOM Authority",
+    nameAr: "هيئة نيوم",
+    acronym: "NEOM",
+    category: "special_zone",
+    website: "https://neom.com",
+    mandateNote: "NEOM smart city regulation, autonomous systems, and data governance",
+    sectors: ["SEC-KSA-SPECIAL-ZONES"],
+  },
+  {
+    regulatorId: "REG-KSA-RSGA",
+    nameEn: "Red Sea Global Authority",
+    nameAr: "هيئة البحر الأحمر العالمية",
+    acronym: "RSGA",
+    category: "special_zone",
+    website: "https://theredsea.sa",
+    mandateNote: "Luxury tourism smart infrastructure, environmental monitoring, and guest data",
+    sectors: ["SEC-KSA-SPECIAL-ZONES", "SEC-KSA-TOURISM"],
+  },
+  {
+    regulatorId: "REG-KSA-DGDA",
+    nameEn: "Diriyah Gate Development Authority",
+    nameAr: "هيئة تطوير بوابة الدرعية",
+    acronym: "DGDA",
+    category: "special_zone",
+    website: "https://dgda.gov.sa",
+    mandateNote: "Heritage smart district technology, visitor analytics, and cultural data",
+    sectors: ["SEC-KSA-SPECIAL-ZONES", "SEC-KSA-TOURISM"],
+  },
+  {
+    regulatorId: "REG-KSA-KAEC",
+    nameEn: "King Abdullah Economic City",
+    nameAr: "مدينة الملك عبدالله الاقتصادية",
+    acronym: "KAEC",
+    category: "special_zone",
+    website: "https://kaec.net",
+    mandateNote: "Economic zone IT governance, industrial tenant compliance, and port technology",
+    sectors: ["SEC-KSA-SPECIAL-ZONES", "SEC-KSA-INDUSTRY"],
+  },
+  {
+    regulatorId: "REG-KSA-SPARK",
+    nameEn: "King Salman Energy Park (SPARK)",
+    nameAr: "مدينة الملك سلمان للطاقة (سبارك)",
+    acronym: "SPARK",
+    category: "special_zone",
+    website: "https://spark.sa",
+    mandateNote: "Energy industry zone OT cybersecurity, tenant compliance, and supply chain IT",
+    sectors: ["SEC-KSA-SPECIAL-ZONES", "SEC-KSA-ENERGY-OG"],
+  },
+  {
+    regulatorId: "REG-KSA-QIDDIYA",
+    nameEn: "Qiddiya Investment Company",
+    nameAr: "شركة القدية للاستثمار",
+    acronym: "QIDDIYA",
+    category: "special_zone",
+    website: "https://qiddiya.com",
+    mandateNote: "Entertainment mega-project smart systems, theme park IoT, and visitor analytics",
+    sectors: ["SEC-KSA-SPECIAL-ZONES", "SEC-KSA-TOURISM"],
+  },
+  {
+    regulatorId: "REG-KSA-ROSHN",
+    nameEn: "ROSHN Group",
+    nameAr: "مجموعة روشن",
+    acronym: "ROSHN",
+    category: "special_zone",
+    website: "https://roshn.sa",
+    mandateNote: "Smart community development, residential IoT, and homeowner data governance",
+    sectors: ["SEC-KSA-CONST", "SEC-KSA-SPECIAL-ZONES"],
+  },
+  {
+    regulatorId: "REG-KSA-AMAALA",
+    nameEn: "AMAALA Development Authority",
+    nameAr: "هيئة تطوير أمالا",
+    acronym: "AMAALA",
+    category: "special_zone",
+    website: "https://amaala.com",
+    mandateNote: "Ultra-luxury tourism smart infrastructure and wellness data governance",
+    sectors: ["SEC-KSA-SPECIAL-ZONES", "SEC-KSA-TOURISM"],
+  },
+];

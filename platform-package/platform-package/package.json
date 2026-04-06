@@ -1,0 +1,28 @@
+{
+  "name": "dos-platform-package-r15",
+  "version": "1.5.0",
+  "description": "DOS Platform Package R1.5 — Standalone Dogan-AI-OS + DAuth platform for independent deployment",
+  "private": true,
+  "scripts": {
+    "build": "bash scripts/build.sh",
+    "dev": "cd backend && pnpm dev",
+    "start": "cd backend && pnpm start",
+    "test": "vitest run",
+    "test:smoke": "vitest run tests/smoke.test.ts",
+    "test:boundary": "vitest run tests/boundary-lock.test.ts",
+    "test:migration": "vitest run tests/migration.test.ts",
+    "test:empty-product": "vitest run tests/empty-product-startup.test.ts",
+    "test:frontend-boundary": "vitest run tests/frontend-boundary.test.ts",
+    "frontend:start": "cd frontend && pnpm start",
+    "frontend:build": "cd frontend && pnpm build",
+    "db:init": "bash scripts/init-db.sh",
+    "smoke": "bash scripts/smoke-test.sh",
+    "backup": "bash scripts/backup.sh",
+    "restore": "bash scripts/restore.sh",
+    "rollback": "bash scripts/rollback.sh",
+    "sbom": "bash scripts/sbom.sh"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.18"
+  }
+}

@@ -1,0 +1,110 @@
+model
+  schema 1.1
+
+type user
+
+type organization
+  relations
+    define owner: [user]
+    define admin: [user] or owner
+    define member: [user] or admin
+
+type workspace
+  relations
+    define organization: [organization]
+    define owner: [user]
+    define admin: [user] or owner
+    define member: [user] or admin
+    define viewer: [user] or member
+
+type module
+  relations
+    define workspace: [workspace]
+    define admin: [user] or admin from workspace
+    define editor: [user] or admin
+    define viewer: [user] or editor or viewer from workspace
+    define can_read: viewer
+    define can_write: editor
+    define can_admin: admin
+
+type document
+  relations
+    define module: [module]
+    define workspace: [workspace]
+    define owner: [user]
+    define editor: [user] or owner or editor from module
+    define viewer: [user] or editor or viewer from module
+    define approver: [user]
+    define can_read: viewer
+    define can_write: editor
+    define can_approve: approver or admin from module
+    define can_delete: owner or admin from module
+
+type risk
+  relations
+    define module: [module]
+    define workspace: [workspace]
+    define owner: [user]
+    define assessor: [user] or editor from module
+    define viewer: [user] or viewer from module
+    define can_read: viewer
+    define can_assess: assessor
+    define can_treat: owner or admin from module
+
+type policy
+  relations
+    define module: [module]
+    define workspace: [workspace]
+    define owner: [user]
+    define reviewer: [user]
+    define approver: [user] or admin from module
+    define viewer: [user] or viewer from module
+    define can_read: viewer
+    define can_edit: owner or editor from module
+    define can_approve: approver
+    define can_publish: approver
+
+type audit
+  relations
+    define module: [module]
+    define workspace: [workspace]
+    define lead_auditor: [user]
+    define auditor: [user] or lead_auditor
+    define viewer: [user] or viewer from module
+    define can_read: viewer
+    define can_execute: auditor
+    define can_close: lead_auditor or admin from module
+
+type vendor
+  relations
+    define module: [module]
+    define workspace: [workspace]
+    define owner: [user]
+    define assessor: [user]
+    define viewer: [user] or viewer from module
+    define can_read: viewer
+    define can_assess: assessor or owner
+    define can_onboard: owner or admin from module
+    define can_offboard: admin from module
+
+type incident
+  relations
+    define module: [module]
+    define workspace: [workspace]
+    define reporter: [user]
+    define investigator: [user]
+    define viewer: [user] or viewer from module
+    define can_read: viewer
+    define can_investigate: investigator or admin from module
+    define can_close: investigator or admin from module
+
+type ai_asset
+  relations
+    define module: [module]
+    define workspace: [workspace]
+    define owner: [user]
+    define reviewer: [user]
+    define viewer: [user] or viewer from module
+    define can_read: viewer
+    define can_deploy: owner or admin from module
+    define can_review: reviewer or admin from module

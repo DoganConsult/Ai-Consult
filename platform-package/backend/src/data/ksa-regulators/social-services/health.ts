@@ -1,0 +1,88 @@
+// ============================================
+// HEALTHCARE & PHARMA (8)
+// ============================================
+
+import { RegulatorDef } from "../ksa-frameworks";
+
+export const REGS_HEALTH: RegulatorDef[] = [
+  {
+    regulatorId: "REG-KSA-MOH",
+    nameEn: "Ministry of Health",
+    nameAr: "وزارة الصحة",
+    acronym: "MOH",
+    category: "health",
+    website: "https://moh.gov.sa",
+    mandateNote: "Healthcare sector regulation and health information systems",
+    sectors: ["SEC-KSA-HEALTH-HOSP", "SEC-KSA-HEALTH-PHARMA"],
+  },
+  {
+    regulatorId: "REG-KSA-CBAHI",
+    nameEn: "Saudi Central Board for Healthcare Accreditation",
+    nameAr: "المركز السعودي لاعتماد المنشآت الصحية",
+    acronym: "CBAHI",
+    category: "health",
+    website: "https://cbahi.gov.sa",
+    mandateNote: "Healthcare facility accreditation standards",
+    sectors: ["SEC-KSA-HEALTH-HOSP"],
+  },
+  {
+    regulatorId: "REG-KSA-SFDA",
+    nameEn: "Saudi Food & Drug Authority",
+    nameAr: "الهيئة العامة للغذاء والدواء",
+    acronym: "SFDA",
+    category: "health",
+    website: "https://sfda.gov.sa",
+    mandateNote: "Food, drug, and medical device safety regulation",
+    sectors: ["SEC-KSA-HEALTH-PHARMA", "SEC-KSA-AGRI"],
+  },
+  {
+    regulatorId: "REG-KSA-SCFHS",
+    nameEn: "Saudi Commission for Health Specialties",
+    nameAr: "الهيئة السعودية للتخصصات الصحية",
+    acronym: "SCFHS",
+    category: "health",
+    website: "https://scfhs.org.sa",
+    mandateNote: "Health professional licensing and continuing education",
+    sectors: ["SEC-KSA-HEALTH-HOSP"],
+  },
+  {
+    regulatorId: "REG-KSA-NUPCO",
+    nameEn: "National Unified Procurement Company",
+    nameAr: "الشركة الوطنية للشراء الموحد",
+    acronym: "NUPCO",
+    category: "health",
+    website: "https://nupco.com",
+    mandateNote: "Healthcare supply chain and pharmaceutical procurement standards",
+    sectors: ["SEC-KSA-HEALTH-PHARMA"],
+  },
+  {
+    regulatorId: "REG-KSA-SHCC",
+    nameEn: "Saudi Health Council",
+    nameAr: "المجلس الصحي السعودي",
+    acronym: "SHCC",
+    category: "health",
+    website: "https://shc.gov.sa",
+    mandateNote: "National health policy coordination and data exchange standards",
+    sectors: ["SEC-KSA-HEALTH-HOSP", "SEC-KSA-HEALTH-PHARMA"],
+  },
+  {
+    regulatorId: "REG-KSA-GAHAR",
+    nameEn: "General Authority for Healthcare Regulation",
+    nameAr: "الهيئة العامة لتنظيم الرعاية الصحية",
+    acronym: "GAHAR",
+    category: "health",
+    website: "https://moh.gov.sa",
+    mandateNote: "Healthcare facility licensing, inspection, and quality standards",
+    sectors: ["SEC-KSA-HEALTH-HOSP"],
+  },
+  {
+    regulatorId: "REG-KSA-KFSHRC",
+    nameEn: "King Faisal Specialist Hospital Research Centre",
+    nameAr: "مستشفى الملك فيصل التخصصي ومركز الأبحاث",
+    acronym: "KFSHRC",
+    category: "health",
+    website: "https://kfshrc.edu.sa",
+    mandateNote: "Clinical research ethics and biomedical data governance",
+    sectors: ["SEC-KSA-HEALTH-HOSP"],
+  },
+];

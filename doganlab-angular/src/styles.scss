@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+  [dir="rtl"] body, [lang="ar"] body {
+    font-family: 'Noto Sans Arabic', 'Inter', system-ui, sans-serif;
+    letter-spacing: 0; word-spacing: 0.05em;
+  }
+  [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, [dir="rtl"] h4 {
+    font-family: 'Noto Sans Arabic', 'Inter', system-ui, sans-serif;
+    line-height: 1.4; letter-spacing: 0;
+  }
+  [dir="rtl"] p { line-height: 1.8; }
+  :focus-visible { outline: 2px solid #7c3aed; outline-offset: 2px; border-radius: 4px; }
+  .skip-link {
+    position: absolute; top: -100%; left: 0; z-index: 9999;
+    padding: 0.75rem 1.5rem; background: #7c3aed; color: white;
+    font-weight: 600; text-decoration: none; border-radius: 0 0 8px 0;
+    &:focus { top: 0; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+  }
+}
