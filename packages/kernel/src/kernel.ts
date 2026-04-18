@@ -12,6 +12,8 @@ import {
   type TenantContext,
 } from '@dogan/db';
 import { JwtVerifier, OpenFgaClient, type AuthzClient } from '@dogan/authz';
+import { AgentsRuntime } from '@dogan/agents';
+import { TemporalRuntime } from '@dogan/temporal';
 import { UnauthorizedError } from '@dogan/contracts';
 import type { KernelConfig } from '@dogan/config';
 import type { Logger } from '@dogan/telemetry';
@@ -51,11 +53,31 @@ export async function buildKernel(opts: BuildKernelOptions): Promise<FastifyInst
     modelId: config.OPENFGA_MODEL_ID,
   });
 
+  const agents = new AgentsRuntime({
+    liteLlmBaseUrl: config.LITELLM_BASE_URL,
+    liteLlmApiKey: config.LITELLM_API_KEY,
+    defaultModel: config.AGENTS_DEFAULT_MODEL,
+    langsmithApiKey: config.LANGSMITH_API_KEY,
+    langsmithProject: config.LANGSMITH_PROJECT,
+    langsmithEndpoint: config.LANGSMITH_ENDPOINT,
+    logger,
+  });
+
+  const temporal = new TemporalRuntime({
+    address: config.TEMPORAL_ADDRESS,
+    namespace: config.TEMPORAL_NAMESPACE,
+    defaultTaskQueue: config.TEMPORAL_TASK_QUEUE_DEFAULT,
+    apiKey: config.TEMPORAL_API_KEY,
+    logger,
+  });
+
   const services: KernelServices = {
     logger,
     db,
     authz,
     jwt,
+    agents,
+    temporal,
     config: config as unknown as Record<string, unknown>,
     withTenant: (ctx, fn) => withTenantTx(db, ctx, fn as never) as Promise<unknown> as never,
   };
@@ -95,6 +117,19 @@ export async function buildKernel(opts: BuildKernelOptions): Promise<FastifyInst
     kernel: config.KERNEL_VERSION,
     products: app.kernelLoadedProducts ?? [],
   }));
+
+  app.get('/kernel/capabilities', async () => ({
+    kernel: config.KERNEL_VERSION,
+    builtin: {
+      agents: agents.describe(),
+      temporal: temporal.describe(),
+      authz: { issuer: config.JWT_ISSUER, fga: Boolean(config.OPENFGA_STORE_ID) },
+    },
+  }));
+
+  app.addHook('onClose', async () => {
+    await temporal.close();
+  });
 
   // ------------ Error handler ------------
   app.setErrorHandler((err, _req, reply) => {

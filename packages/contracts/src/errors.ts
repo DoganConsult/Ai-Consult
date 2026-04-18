@@ -32,3 +32,10 @@ export class TenantContextMissingError extends KernelError {
     this.name = 'TenantContextMissingError';
   }
 }
+
+export class ConfigError extends KernelError {
+  constructor(message: string) {
+    super('config_error', message, 500);
+    this.name = 'ConfigError';
+  }
+}

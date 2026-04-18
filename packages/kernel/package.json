@@ -12,11 +12,13 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@dogan/agents": "workspace:*",
     "@dogan/authz": "workspace:*",
     "@dogan/config": "workspace:*",
     "@dogan/contracts": "workspace:*",
     "@dogan/db": "workspace:*",
     "@dogan/telemetry": "workspace:*",
+    "@dogan/temporal": "workspace:*",
     "fastify": "5.2.0",
     "@fastify/sensible": "6.0.3",
     "@fastify/cors": "10.0.2",

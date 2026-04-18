@@ -1,0 +1,21 @@
+{
+  "name": "@dogan/temporal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": { ".": "./dist/index.js" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@dogan/contracts": "workspace:*",
+    "@dogan/telemetry": "workspace:*",
+    "@temporalio/client": "1.11.7"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  }
+}

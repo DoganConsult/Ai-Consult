@@ -4,12 +4,16 @@ import type { Database, TenantContext } from '@dogan/db';
 import type { Logger } from '@dogan/telemetry';
 import type { AuthzClient, JwtVerifier, VerifiedClaims } from '@dogan/authz';
 import type { Platform } from '@dogan/contracts';
+import type { AgentsRuntime } from '@dogan/agents';
+import type { TemporalRuntime } from '@dogan/temporal';
 
 export interface KernelServices {
   logger: Logger;
   db: Kysely<Database>;
   authz: AuthzClient;
   jwt: JwtVerifier;
+  agents: AgentsRuntime;
+  temporal: TemporalRuntime;
   config: Record<string, unknown>;
   withTenant<T>(ctx: TenantContext, fn: (tx: unknown) => Promise<T>): Promise<T>;
 }
