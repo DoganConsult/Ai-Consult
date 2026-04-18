@@ -1,5 +1,6 @@
 *.env
 !**/.env.example
+!ops/secrets/*.enc.env
 node_modules/
 dist/
 build/
