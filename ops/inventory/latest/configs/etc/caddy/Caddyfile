@@ -1,0 +1,60 @@
+{
+  admin off
+  auto_https off
+}
+
+http://127.0.0.1:8088 {
+  bind 127.0.0.1
+  handle /gateway/health {
+    respond "dogan-ai-os gateway: ok" 200
+  }
+  handle /pg/info {
+    respond "PG18 master @ 127.0.0.1:5432" 200
+  }
+  handle_path /ai/* {
+    reverse_proxy 127.0.0.1:4000
+  }
+  handle_path /authz/* {
+    reverse_proxy 127.0.0.1:8080
+  }
+  handle_path /temporal/* {
+    reverse_proxy 127.0.0.1:7243
+  }
+  handle_path /analytics/* {
+    reverse_proxy 127.0.0.1:8123
+  }
+  handle_path /s3/* {
+    reverse_proxy 127.0.0.1:9100
+  }
+  handle_path /s3-console/* {
+    reverse_proxy 127.0.0.1:9101
+  }
+  handle /metrics {
+    reverse_proxy 127.0.0.1:9464
+  }
+  handle_path /otlp/* {
+    reverse_proxy 127.0.0.1:4318
+  }
+  handle_path /metrics-prom/* {
+    reverse_proxy 127.0.0.1:9090
+  }
+  handle_path /grafana/* {
+    reverse_proxy 127.0.0.1:3001
+  }
+  handle_path /alerts/* {
+    reverse_proxy 127.0.0.1:9093
+  }
+  handle_path /powa/* {
+    reverse_proxy 127.0.0.1:8889
+  }
+  handle_path /pgbadger/* {
+    root * /var/lib/pgbadger
+    file_server browse
+  }
+  handle_path /llm-local/* {
+    reverse_proxy 127.0.0.1:11434
+  }
+  handle {
+    respond "unknown route" 404
+  }
+}

@@ -1,0 +1,12 @@
+# git
+5bf976e5ebc5e1caa3c9d014378d476bd5556eb4
+ M .gitignore
+?? ops/inventory/
+# pnpm-workspace
+packages:
+  - "packages/*"
+  - "services/*"
+  - "products/*"
+  - "src/*"
+# packageManager
+pnpm@10.33.0

@@ -1,0 +1,75 @@
+# node
+/usr/bin/node
+v22.22.1
+# pnpm
+/usr/bin/pnpm
+10.33.0
+# npm
+/usr/bin/npm
+10.9.4
+# python
+/usr/bin/python3
+Python 3.10.12
+# java
+/usr/bin/java
+openjdk version "21.0.10" 2026-01-20
+OpenJDK Runtime Environment (build 21.0.10+7-Ubuntu-122.04)
+OpenJDK 64-Bit Server VM (build 21.0.10+7-Ubuntu-122.04, mixed mode, sharing)
+# go
+# psql
+/usr/bin/psql
+psql (PostgreSQL) 18.3 (Ubuntu 18.3-1.pgdg22.04+1)
+# pgbouncer
+/usr/sbin/pgbouncer
+PgBouncer 1.25.1
+# pgbackrest
+/usr/bin/pgbackrest
+pgBackRest 2.58.0
+# nats-server
+/usr/local/bin/nats-server
+nats-server: v2.10.22
+# temporal
+# openfga
+/usr/local/bin/openfga
+2026/04/19 03:39:42 OpenFGA version `v1.14.2` build from `c8a0e7b553ec322edfaa88948d57ba73bcad8883` on `2026-04-14T19:35:46Z` 
+# minio
+/usr/local/bin/minio
+minio version RELEASE.2025-09-07T16-13-09Z (commit-id=07c3a429bfed433e49018cb0f78a52145d4bedeb)
+# valkey
+/usr/bin/redis-server
+Redis server v=6.0.16 sha=00000000:0 malloc=jemalloc-5.2.1 bits=64 build=e91d7986ac6d5bb6
+# clickhouse
+/usr/bin/clickhouse
+ClickHouse local version 26.3.9.8 (official build).
+# litellm
+# ollama
+/usr/local/bin/ollama
+ollama version is 0.17.7
+# caddy
+/usr/bin/caddy
+v2.11.2 h1:iOlpsSiSKqEW+SIXrcZsZ/NO74SzB/ycqqvAIEfIm64=
+# otelcol
+# prometheus
+/usr/local/bin/prometheus
+prometheus, version 3.6.0 (branch: HEAD, revision: 491734606591ef8c188f5489c70380805bc868c0)
+# alertmanager
+/usr/local/bin/alertmanager
+alertmanager, version 0.28.1 (branch: HEAD, revision: b2099eaa2c9ebc25edb26517cb9c732738e93910)
+# grafana-server
+/usr/sbin/grafana-server
+Deprecation warning: 'grafana-server' is deprecated and will be removed in a future release. Use the 'grafana server' subcommand instead.
+# cloudflared
+/usr/local/bin/cloudflared
+cloudflared version 2026.3.0 (built 2026-03-09-14:08 UTC)
+# sops
+/usr/local/bin/sops
+sops 3.9.0
+# age
+/usr/bin/age
+1.0.0
+# syft
+# grype
+# cosign
+# pm2
+/usr/bin/pm2
+6.0.14

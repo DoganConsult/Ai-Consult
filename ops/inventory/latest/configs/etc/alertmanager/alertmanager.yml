@@ -1,0 +1,50 @@
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: '127.0.0.1:25'
+  smtp_from: 'alerts@dogan-ai.os'
+  smtp_require_tls: false
+
+route:
+  receiver: ops-default
+  group_by: ['alertname', 'service', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers: [severity = "critical"]
+      receiver: ops-pager
+      group_wait: 10s
+      repeat_interval: 1h
+      continue: true
+    - matchers: [severity = "warning"]
+      receiver: ops-default
+      repeat_interval: 6h
+    - matchers: [alertname =~ "Dogan(SodBlocked|RiskCritical|AuthFailureBurst)"]
+      receiver: ops-secops
+      group_wait: 10s
+      repeat_interval: 30m
+
+inhibit_rules:
+  - source_matchers: [severity = "critical"]
+    target_matchers: [severity = "warning"]
+    equal: ['alertname', 'service']
+
+receivers:
+  - name: ops-default
+    webhook_configs:
+      - url: 'http://127.0.0.1:3100/pillars/dnoc/alerts/webhook'
+        send_resolved: true
+        max_alerts: 100
+  - name: ops-pager
+    webhook_configs:
+      - url: 'http://127.0.0.1:3100/pillars/dnoc/alerts/pager'
+        send_resolved: true
+        max_alerts: 100
+  - name: ops-secops
+    webhook_configs:
+      - url: 'http://127.0.0.1:3100/pillars/dsoc/alerts/webhook'
+        send_resolved: true
+        max_alerts: 100
+
+templates:
+  - /etc/alertmanager/templates/*.tmpl

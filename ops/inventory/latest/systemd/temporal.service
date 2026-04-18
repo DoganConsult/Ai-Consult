@@ -1,0 +1,19 @@
+[Unit]
+Description=Temporal native server (PG18 persistence)
+After=postgresql.service network-online.target
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=temporal-svc
+Group=temporal-svc
+WorkingDirectory=/etc/temporal
+Environment=TEMPORAL_ENVIRONMENT=production
+Environment=TEMPORAL_CONFIG_DIR=/etc/temporal
+Environment=TEMPORAL_ROOT=/etc/temporal
+ExecStart=/usr/local/bin/temporal-server --root /etc/temporal --env production --config . start
+Restart=always
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

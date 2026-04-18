@@ -1,0 +1,16 @@
+[Unit]
+Description=OpenFGA native authz server
+After=postgresql.service network-online.target
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=openfga
+Group=openfga
+EnvironmentFile=/etc/openfga/openfga.env
+ExecStart=/usr/local/bin/openfga run
+Restart=always
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

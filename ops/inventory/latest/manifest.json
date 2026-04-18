@@ -1,0 +1,14 @@
+{
+  "snapshot": "20260418T193940Z",
+  "host": "9v5rfdsb.vm",
+  "kernel": "5.15.0-60-generic",
+  "os": "Ubuntu 22.04.5 LTS",
+  "git_sha": "5bf976e5ebc5e1caa3c9d014378d476bd5556eb4",
+  "git_branch": "main",
+  "node": "v22.22.1",
+  "pnpm": "10.33.0",
+  "postgres": "18.3 (Ubuntu 18.3-1.pgdg22.04+1)",
+  "keycloak_active": "active",
+  "composer_active": "online",
+  "artifact_dir": "/root/Ai-Consult-Microservices/ops/inventory/out/20260418T193940Z"
+}

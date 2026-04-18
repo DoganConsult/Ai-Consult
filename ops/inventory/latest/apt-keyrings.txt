@@ -1,0 +1,20 @@
+/etc/apt/keyrings/:
+total 8
+drwxr-xr-x 2 root root   25 Apr 18 19:22 .
+drwxr-xr-x 8 root root 4096 Jun 13  2023 ..
+-rw-r--r-- 1 root root 1758 Apr 18 19:22 grafana.gpg
+
+/usr/share/keyrings/:
+total 68
+drwxr-xr-x   2 root root 4096 Apr 18 18:29 .
+drwxr-xr-x 148 root root 8192 Apr 19 00:28 ..
+-rw-r--r--   1 root root 5024 Apr 18 18:29 caddy-stable-archive-keyring.gpg
+-rw-r--r--   1 root root 4203 Apr 18 18:29 clickhouse-keyring.gpg
+-rw-------   1 root root   32 Apr 18 18:29 clickhouse-keyring.gpg~
+-rw-r--r--   1 root root 2279 Apr  6 04:36 cloudflare-public-v2.gpg
+-rw-r--r--   1 root root 1207 Mar  8 14:24 nodesource.gpg
+-rw-r--r--   1 root root 7399 Sep 18  2018 ubuntu-archive-keyring.gpg
+-rw-r--r--   1 root root 6713 Oct 27  2016 ubuntu-archive-removed-keys.gpg
+-rw-r--r--   1 root root 3023 Mar 27  2021 ubuntu-cloudimage-keyring.gpg
+-rw-r--r--   1 root root    0 Jan 17  2018 ubuntu-cloudimage-removed-keys.gpg
+-rw-r--r--   1 root root 1227 May 28  2010 ubuntu-master-keyring.gpg

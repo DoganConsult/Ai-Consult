@@ -1,0 +1,13 @@
+[Unit]
+Description=LiteLLM proxy native (AI gateway)
+After=network-online.target
+
+[Service]
+Type=simple
+User=litellm
+EnvironmentFile=-/etc/litellm/litellm.env
+ExecStart=/opt/litellm/bin/litellm --config /etc/litellm/config.yaml --host 127.0.0.1 --port 4000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

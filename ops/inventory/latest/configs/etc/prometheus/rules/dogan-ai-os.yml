@@ -1,0 +1,33 @@
+groups:
+  - name: dogan-ai-os
+    rules:
+      - alert: NodeDown
+        expr: up == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "Target {{ $labels.job }}/{{ $labels.instance }} is down"
+      - alert: HighCPU
+        expr: 100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "CPU > 90% on {{ $labels.instance }}"
+      - alert: LowDisk
+        expr: (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes) * 100 < 10
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Disk < 10% on {{ $labels.mountpoint }} {{ $labels.instance }}"
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "PostgreSQL exporter cannot reach DB"
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "Redis exporter cannot reach Redis"

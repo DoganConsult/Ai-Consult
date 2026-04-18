@@ -1,0 +1,110 @@
+[
+  {
+    "name": "dogan-ai-os",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices",
+    "private": true
+  },
+  {
+    "name": "@dogan/agents",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/packages/agents",
+    "private": true
+  },
+  {
+    "name": "@dogan/authz",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/packages/authz",
+    "private": true
+  },
+  {
+    "name": "@dogan/config",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/packages/config",
+    "private": true
+  },
+  {
+    "name": "@dogan/contracts",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/packages/contracts",
+    "private": true
+  },
+  {
+    "name": "@dogan/db",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/packages/db",
+    "private": true
+  },
+  {
+    "name": "@dogan/events",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/packages/events",
+    "private": true
+  },
+  {
+    "name": "@dogan/kernel",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/packages/kernel",
+    "private": true
+  },
+  {
+    "name": "@dogan/kernel-testkit",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/packages/kernel-testkit",
+    "private": true
+  },
+  {
+    "name": "@dogan/telemetry",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/packages/telemetry",
+    "private": true
+  },
+  {
+    "name": "@dogan/temporal",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/packages/temporal",
+    "private": true
+  },
+  {
+    "name": "@dogan/product-consult",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/products/consult",
+    "private": true
+  },
+  {
+    "name": "@dogan/kernel-api",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/services/kernel-api",
+    "private": true
+  },
+  {
+    "name": "@dogan/dauth",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/src/DAuth",
+    "private": true
+  },
+  {
+    "name": "@dogan/dnoc",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/src/DNOC",
+    "private": true
+  },
+  {
+    "name": "@dogan/dos",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/src/DOS",
+    "private": true
+  },
+  {
+    "name": "@dogan/dsoc",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/src/DSOC",
+    "private": true
+  },
+  {
+    "name": "@dogan/composer",
+    "version": "0.1.0",
+    "path": "/root/Ai-Consult-Microservices/src/composer",
+    "private": true
+  }
+]

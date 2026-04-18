@@ -1,0 +1,10 @@
+[Unit]
+Description=Dogan AI OS - weekly pgBackRest restore drill (Sun 04:00)
+
+[Timer]
+OnCalendar=Sun *-*-* 04:00:00
+Persistent=true
+Unit=dogan-pgbackrest-restore-drill.service
+
+[Install]
+WantedBy=timers.target

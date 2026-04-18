@@ -1,0 +1,14 @@
+[
+  {
+    "name": "dogan-os",
+    "pm_id": 0,
+    "pm2_env": {
+      "status": null,
+      "exec_mode": null,
+      "instances": null,
+      "pm_exec_path": null,
+      "pm_cwd": null,
+      "restart_time": null
+    }
+  }
+]

@@ -1,0 +1,55 @@
+# host
+   Static hostname: n/a
+Transient hostname: 9v5rfdsb.vm
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: 46a937477e96594cb94c01d68f5629b1
+           Boot ID: 15fdebdc1b4f4fae92eaf65ccc65078c
+    Virtualization: kvm
+  Operating System: Ubuntu 22.04.5 LTS
+            Kernel: Linux 5.15.0-60-generic
+      Architecture: x86-64
+   Hardware Vendor: Red Hat
+    Hardware Model: KVM
+# kernel
+Linux 9v5rfdsb.vm 5.15.0-60-generic #66-Ubuntu SMP Fri Jan 20 14:29:49 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+# os-release
+PRETTY_NAME="Ubuntu 22.04.5 LTS"
+NAME="Ubuntu"
+VERSION_ID="22.04"
+VERSION="22.04.5 LTS (Jammy Jellyfish)"
+VERSION_CODENAME=jammy
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=jammy
+# cpu
+8
+Architecture:                    x86_64
+Model name:                      Intel Xeon Processor (Skylake, IBRS)
+Core(s) per socket:              4
+Socket(s):                       1
+# memory
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       9.0Gi       224Mi       143Mi       6.4Gi       5.7Gi
+Swap:             0B          0B          0B
+# disk
+Filesystem     Type   Size  Used Avail Use% Mounted on
+/dev/vda2      xfs    150G   42G  109G  28% /
+# locale
+LANG=C.UTF-8
+LANGUAGE=
+LC_CTYPE="C.UTF-8"
+LC_NUMERIC="C.UTF-8"
+LC_TIME="C.UTF-8"
+# timezone
+               Local time: Sun 2026-04-19 03:39:41 CST
+           Universal time: Sat 2026-04-18 19:39:41 UTC
+                 RTC time: Sat 2026-04-18 19:39:41
+                Time zone: Asia/Shanghai (CST, +0800)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no

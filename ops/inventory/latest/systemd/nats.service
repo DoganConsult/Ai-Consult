@@ -1,0 +1,20 @@
+[Unit]
+Description=NATS JetStream (Dogan AI OS event bus)
+After=network.target
+
+[Service]
+Type=simple
+User=nats
+Group=nats
+ExecStart=/usr/local/bin/nats-server -c /etc/nats/nats-server.conf
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/nats /var/log/nats
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

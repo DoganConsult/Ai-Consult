@@ -1,0 +1,30 @@
+postgresql@18-main.service                         enabled=enabled-runtime active=active
+postgresql.service                                 enabled=enabled    active=active
+pgbouncer.service                                  enabled=enabled    active=active
+keycloak.service                                   enabled=enabled    active=active
+openfga.service                                    enabled=enabled    active=active
+temporal.service                                   enabled=enabled    active=active
+litellm.service                                    enabled=enabled    active=active
+ollama.service                                     enabled=enabled    active=active
+nats.service                                       enabled=enabled    active=active
+valkey.service                                     enabled=n/a        active=inactive
+n/a
+redis.service                                      enabled=alias      active=active
+clickhouse-server.service                          enabled=enabled    active=active
+minio.service                                      enabled=enabled    active=active
+caddy.service                                      enabled=enabled    active=active
+otelcol.service                                    enabled=enabled    active=active
+prometheus.service                                 enabled=enabled    active=active
+alertmanager.service                               enabled=enabled    active=active
+grafana-server.service                             enabled=enabled    active=active
+cloudflared.service                                enabled=enabled    active=active
+cloudflared-update.timer                           enabled=disabled
+n/a active=inactive
+n/a
+dogan-secrets.service                              enabled=enabled    active=active
+oathkeeper.service                                 enabled=n/a        active=inactive
+n/a
+dogan-pgbackrest-backup.timer                      enabled=enabled    active=active
+dogan-pgbackrest-restore-drill.timer               enabled=enabled    active=active
+pm2-root.service                                   enabled=enabled    active=inactive
+n/a

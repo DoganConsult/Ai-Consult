@@ -1,0 +1,242 @@
+# version
+PostgreSQL 18.3 (Ubuntu 18.3-1.pgdg22.04+1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0, 64-bit
+# settings (non-default)
+DateStyle|ISO, MDY|configuration file
+TimeZone|Asia/Shanghai|configuration file
+application_name|psql|client
+archive_command|pgbackrest --stanza=dogan_master archive-push %p|configuration file
+archive_mode|on|configuration file
+auto_explain.log_analyze|on|configuration file
+auto_explain.log_buffers|on|configuration file
+auto_explain.log_format|text|configuration file
+auto_explain.log_min_duration|2000|configuration file
+autovacuum|on|configuration file
+autovacuum_analyze_scale_factor|0.02|configuration file
+autovacuum_max_workers|4|configuration file
+autovacuum_naptime|30|configuration file
+autovacuum_vacuum_cost_limit|2000|configuration file
+autovacuum_vacuum_scale_factor|0.05|configuration file
+autovacuum_worker_slots|16|configuration file
+checkpoint_completion_target|0.9|configuration file
+checkpoint_timeout|900|configuration file
+cluster_name|18/main|configuration file
+cron.database_name|dogan_master|configuration file
+cron.use_background_workers|on|configuration file
+default_statistics_target|250|configuration file
+default_text_search_config|pg_catalog.english|configuration file
+dynamic_shared_memory_type|posix|configuration file
+effective_cache_size|262144|configuration file
+effective_io_concurrency|200|configuration file
+external_pid_file|/var/run/postgresql/18-main.pid|configuration file
+hot_standby|on|configuration file
+huge_pages|try|configuration file
+idle_in_transaction_session_timeout|60000|configuration file
+jit|off|configuration file
+lc_messages|C.UTF-8|configuration file
+lc_monetary|C.UTF-8|configuration file
+lc_numeric|C.UTF-8|configuration file
+lc_time|C.UTF-8|configuration file
+lock_timeout|5000|configuration file
+log_autovacuum_min_duration|1000|configuration file
+log_checkpoints|on|configuration file
+log_connections|on|configuration file
+log_destination|stderr|configuration file
+log_directory|log|configuration file
+log_disconnections|on|configuration file
+log_filename|postgresql-%a.log|configuration file
+log_line_prefix|%m [%p] %q%u@%d/%a |configuration file
+log_lock_waits|on|configuration file
+log_min_duration_statement|500|configuration file
+log_rotation_age|1440|configuration file
+log_temp_files|10240|configuration file
+log_timezone|Asia/Shanghai|configuration file
+log_truncate_on_rotation|on|configuration file
+logging_collector|on|configuration file
+maintenance_work_mem|131072|configuration file
+max_connections|200|configuration file
+max_replication_slots|10|configuration file
+max_wal_senders|10|configuration file
+max_wal_size|4096|configuration file
+min_wal_size|1024|configuration file
+password_encryption|scram-sha-256|configuration file
+pg_partman_bgw.dbname|dogan_master|configuration file
+pg_partman_bgw.interval|3600|configuration file
+pg_partman_bgw.role|dogan_master|configuration file
+pg_stat_statements.max|10000|configuration file
+pg_stat_statements.track|top|configuration file
+pgaudit.log|ddl,role,write|configuration file
+pgaudit.log_catalog|off|configuration file
+pgaudit.log_level|log|configuration file
+pgaudit.log_parameter|off|configuration file
+pgaudit.log_relation|on|configuration file
+pgaudit.log_statement_once|on|configuration file
+port|5432|configuration file
+random_page_cost|1.1|configuration file
+shared_buffers|524288|configuration file
+shared_preload_libraries|timescaledb,pg_cron,pg_stat_statements,pgaudit,pg_partman_bgw,pg_qualstats,powa,pg_hint_plan,pg_stat_kcache,pg_wait_sampling,pg_failover_slots,auto_explain,set_user,pgauditlogtofile,pg_squeeze,pglogical|configuration file
+ssl|on|configuration file
+ssl_cert_file|/etc/postgresql/18/main/ssl/server.crt|configuration file
+ssl_key_file|/etc/postgresql/18/main/ssl/server.key|configuration file
+statement_timeout|30000|configuration file
+superuser_reserved_connections|5|configuration file
+synchronous_commit|on|configuration file
+temp_buffers|2048|configuration file
+track_functions|all|configuration file
+track_io_timing|on|configuration file
+unix_socket_directories|/var/run/postgresql|configuration file
+wal_compression|pglz|configuration file
+wal_level|logical|configuration file
+work_mem|16384|configuration file
+# databases
+dogan_master|39 MB
+keycloak|13 MB
+langfuse|7830 kB
+openfga|8118 kB
+postgres|7654 kB
+template0|7654 kB
+template1|7750 kB
+temporal|9462 kB
+temporal_visibility|9870 kB
+# roles
+barman|f|f|t
+dogan_app|f|f|t
+dogan_master|f|f|t
+keycloak|f|f|t
+langfuse|f|f|t
+openfga|f|f|t
+orafce_set_umask|f|f|f
+pg_checkpoint|f|f|f
+pg_create_subscription|f|f|f
+pg_database_owner|f|f|f
+pg_execute_server_program|f|f|f
+pg_maintain|f|f|f
+pg_monitor|f|f|f
+pg_read_all_data|f|f|f
+pg_read_all_settings|f|f|f
+pg_read_all_stats|f|f|f
+pg_read_server_files|f|f|f
+pg_signal_autovacuum_worker|f|f|f
+pg_signal_backend|f|f|f
+pg_stat_scan_tables|f|f|f
+pg_use_reserved_connections|f|f|f
+pg_write_all_data|f|f|f
+pg_write_server_files|f|f|f
+pgbackground_role|f|f|f
+pgexporter|f|f|t
+plprofiler|f|f|f
+postgres|t|t|t
+powa|f|f|t
+powa_admin|f|f|f
+powa_read_all_data|f|f|f
+powa_read_all_metrics|f|f|f
+powa_signal_backend|f|f|f
+powa_snapshot|f|f|f
+powa_write_all_data|f|f|f
+temporal|f|f|t
+# extensions per db
+## openfga
+pg_stat_statements@1.12
+pgcrypto@1.4
+plpgsql@1.0
+uuid-ossp@1.1
+## temporal
+pg_stat_statements@1.12
+pgcrypto@1.4
+plpgsql@1.0
+uuid-ossp@1.1
+## temporal_visibility
+btree_gin@1.3
+pg_stat_statements@1.12
+pgcrypto@1.4
+plpgsql@1.0
+uuid-ossp@1.1
+## langfuse
+pg_stat_statements@1.12
+pgcrypto@1.4
+plpgsql@1.0
+uuid-ossp@1.1
+## dogan_master
+age@1.7.0
+ai@0.11.2
+btree_gin@1.3
+btree_gist@1.8
+citext@1.8
+credcheck@4.6.0
+cube@1.5
+dict_int@1.0
+earthdistance@1.2
+extra_window_functions@1.0
+file_fdw@1.0
+first_last_agg@0.1.4
+fuzzystrmatch@1.2
+h3@4.2.3
+h3_postgis@4.2.3
+hll@2.19
+hstore@1.8
+http@1.7
+hypopg@1.4.2
+intarray@1.5
+ip4r@2.4
+isn@1.3
+ltree@1.3
+mysql_fdw@1.2
+ogr_fdw@1.1
+oracle_fdw@1.2
+orafce@4.16
+pg_background@1.9
+pg_cron@1.6
+pg_hint_plan@1.8.0
+pg_ivm@1.13
+pg_partman@5.4.3
+pg_permissions@1.4
+pg_pwhash@1.0
+pg_qualstats@2.1.3
+pg_repack@1.5.3
+pg_squeeze@1.9
+pg_stat_kcache@2.3.1
+pg_stat_statements@1.12
+pg_track_settings@2.1.2
+pg_trgm@1.6
+pg_uuidv7@1.7
+pg_wait_sampling@1.1
+pgaudit@18.0
+pgauditlogtofile@1.8
+pgcrypto@1.4
+pgfincore@1.3.1
+pglogical@2.4.6
+pgmq@1.11.1
+pgrouting@4.0.1
+pgtap@1.3.4
+pgtt@4.4.0
+pljs@1.0.5
+pllua@2.0
+plperl@1.0
+plpgsql@1.0
+plprofiler@4.2
+plpython3u@1.0
+plr@8.4.8.4
+plsh@2
+pltcl@1.0
+postgis@3.6.3
+postgis_raster@3.6.3
+postgres_fdw@1.2
+powa@5.1.1
+prefix@1.2.0
+roaringbitmap@1.1
+rum@1.3
+semver@0.41.0
+set_user@4.2.0
+tablefunc@1.0
+tdigest@1.4.3
+tds_fdw@2.0.5
+timescaledb@2.26.3
+unaccent@1.1
+uuid-ossp@1.1
+vector@0.8.2
+vectorscale@0.9.0
+## keycloak
+plpgsql@1.0
+# pgaudit + preload
+timescaledb,pg_cron,pg_stat_statements,pgaudit,pg_partman_bgw,pg_qualstats,powa,pg_hint_plan,pg_stat_kcache,pg_wait_sampling,pg_failover_slots,auto_explain,set_user,pgauditlogtofile,pg_squeeze,pglogical
+# pgbackrest stanzas
+[{"archive":[{"database":{"id":1,"repo-key":1},"id":"18-1","max":"000000010000000000000018","min":"000000010000000000000002"}],"backup":[{"archive":{"start":"000000010000000000000008","stop":"000000010000000000000008"},"backrest":{"format":5,"version":"2.58.0"},"database":{"id":1,"repo-key":1},"error":false,"info":{"delta":80642743,"repository":{"delta":9037845,"size":9037845},"size":80642743},"label":"20260418-192043F","lsn":{"start":"0/8000028","stop":"0/8001A88"},"prior":null,"reference":null,"timestamp":{"start":1776511243,"stop":1776511248},"type":"full"},{"archive":{"start":"000000010000000000000016","stop":"000000010000000000000017"},"backrest":{"format":5,"version":"2.58.0"},"database":{"id":1,"repo-key":1},"error":false,"info":{"delta":72752341,"repository":{"delta":7076171,"size":13544478},"size":134475708},"label":"20260418-192043F_20260419-023125I","lsn":{"start":"0/16000028","stop":"0/17001E78"},"prior":"20260418-192043F","reference":["20260418-192043F"],"timestamp":{"start":1776537085,"stop":1776537088},"type":"incr"}],"cipher":"none","db":[{"id":1,"repo-key":1,"system-id":7630040038888603303,"version":"18"}],"name":"dogan_master","repo":[{"cipher":"none","key":1,"status":{"code":0,"message":"ok"}}],"status":{"code":0,"lock":{"backup":{"held":false},"restore":{"held":false}},"message":"ok"}}]

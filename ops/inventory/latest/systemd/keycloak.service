@@ -1,0 +1,18 @@
+[Unit]
+Description=Keycloak (Dogan DAuth IdP)
+After=network.target postgresql@18-main.service
+Wants=postgresql@18-main.service
+
+[Service]
+Type=simple
+User=keycloak
+Group=keycloak
+EnvironmentFile=/etc/dogan-ai-os/keycloak.env
+ExecStart=/opt/keycloak/bin/kc.sh start --optimized
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

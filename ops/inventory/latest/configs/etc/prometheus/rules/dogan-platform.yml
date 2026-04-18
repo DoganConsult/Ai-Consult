@@ -1,0 +1,39 @@
+groups:
+  - name: dogan-ai-os-platform
+    rules:
+      - alert: DoganComponentDown
+        expr: dogan_component_up == 0
+        for: 2m
+        labels: { severity: critical, service: dogan-ai-os }
+        annotations:
+          summary: "Dogan AI OS component {{ $labels.component }} is DOWN"
+          description: "Component {{ $labels.component }} has been unreachable for 2m."
+      - alert: DoganAuthFailureBurst
+        expr: sum by (tenant) (rate(dogan_auth_failure_total[5m])) > 10
+        for: 5m
+        labels: { severity: warning, service: dogan-ai-os }
+        annotations:
+          summary: "High auth-failure rate on tenant {{ $labels.tenant }}"
+      - alert: DoganSodBlocked
+        expr: sum by (tenant) (rate(dogan_sod_blocked_total[15m])) > 0
+        for: 5m
+        labels: { severity: warning, service: dogan-ai-os }
+        annotations:
+          summary: "SoD violations being blocked for tenant {{ $labels.tenant }}"
+      - alert: DoganRiskCritical
+        expr: sum by (tenant) (increase(dogan_risk_scored_total{band="critical"}[10m])) > 0
+        labels: { severity: critical, service: dogan-ai-os }
+        annotations:
+          summary: "Critical risk event for tenant {{ $labels.tenant }}"
+      - alert: DoganOutboxBacklog
+        expr: dogan_outbox_pending > 1000
+        for: 10m
+        labels: { severity: warning, service: dogan-ai-os }
+        annotations:
+          summary: "Outbox backlog > 1000"
+      - alert: DoganOutboxDeadLetter
+        expr: dogan_outbox_dead > 0
+        for: 5m
+        labels: { severity: warning, service: dogan-ai-os }
+        annotations:
+          summary: "Outbox has dead-lettered events"

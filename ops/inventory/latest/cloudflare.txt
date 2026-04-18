@@ -1,0 +1,6 @@
+# version
+cloudflared version 2026.3.0 (built 2026-03-09-14:08 UTC)
+# tunnels
+2026-04-18T19:39:47Z ERR Cannot determine default origin certificate path. No file cert.pem in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp /etc/cloudflared /usr/local/etc/cloudflared]. You need to specify the origin certificate path by specifying the origincert option in the configuration file, or set TUNNEL_ORIGIN_CERT environment variable originCertPath=
+Error locating origin cert: client didn't specify origincert path
+# active service config (redacted)
