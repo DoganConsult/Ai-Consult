@@ -100,11 +100,11 @@ DAuth:
 
 DSOC:
 - [x] Audit hook on every mutating verb with tenant + user + reqId.
-- [ ] Audit sink to `platform.audit_log` (currently logger-only).
+- [x] Audit sink to `platform.audit_log` (monthly-partitioned, tier-aware retention sweep, DSOC `AuditSink` + `AlertConsumer` live, migrations `0006_dsoc_audit_alerts.sql` + `0007_dsoc_security_definer.sql` applied).
 
 DNOC:
-- [x] `/kernel/ready` (DB probe), `/metrics` (Prometheus), pillar `/health`.
-- [ ] Wire to Prometheus scrape + Alertmanager rules.
+- [x] `/kernel/ready` (7-component aggregator: postgres+nats+keycloak+openfga+temporal+redis+litellm), `/metrics` (full Prometheus text incl. `dogan_component_up` gauges), pillar `/health`.
+- [x] Wire to Prometheus scrape + Alertmanager rules (`/etc/prometheus/prometheus.yml` job `dogan-ai-os` UP; `ops/prometheus/rules/dogan-platform.yml` shipped: `DoganComponentDown`, `DoganAuthFailureBurst`, `DoganSodBlocked`, `DoganRiskCritical`, `DoganOutboxBacklog`, `DoganOutboxDeadLetter`).
 
 Cross-cutting:
 - [x] `dogan_app` role created NOSUPERUSER NOBYPASSRLS.

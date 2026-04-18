@@ -28,7 +28,10 @@ export const apiKeyRoutes =
   (outbox: Outbox): FastifyPluginAsync => async (app: FastifyInstance) => {
     app.post(
       '/pillars/dauth/api-keys',
-      { preHandler: [app.authenticate], schema: { body: CreateApiKey } },
+      {
+        preHandler: [app.authenticate, app.dauth.quotaPreflight({ dimension: 'api_keys' })],
+        schema: { body: CreateApiKey },
+      },
       async (req, reply) => {
         if (!req.tenantCtx) throw new UnauthorizedError('tenant context missing');
         const body = req.body as typeof CreateApiKey.static;

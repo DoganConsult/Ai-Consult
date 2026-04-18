@@ -74,3 +74,5 @@ export function initTelemetry(opts: TelemetryOptions): Telemetry {
 
 export { trace, context, SpanStatusCode };
 export type { Logger };
+export { getMetricsRegistry, renderMetrics, getDauthMetrics } from './metrics.js';
+export type { DauthMetrics } from './metrics.js';

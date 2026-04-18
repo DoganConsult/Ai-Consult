@@ -26,7 +26,10 @@ export const sessionRoutes =
   (outbox: Outbox): FastifyPluginAsync => async (app: FastifyInstance) => {
     app.post(
       '/pillars/dauth/sessions',
-      { preHandler: [app.authenticate], schema: { body: CreateSession } },
+      {
+        preHandler: [app.authenticate, app.dauth.quotaPreflight({ dimension: 'sessions' })],
+        schema: { body: CreateSession },
+      },
       async (req, reply) => {
         if (!req.tenantCtx) throw new UnauthorizedError('tenant context missing');
         const body = req.body as typeof CreateSession.static;

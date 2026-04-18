@@ -90,7 +90,10 @@ export const provisioningRoutes =
 
     app.post(
       '/pillars/dauth/users',
-      { preHandler: [app.authenticate], schema: { body: UserProvision } },
+      {
+        preHandler: [app.authenticate, app.dauth.quotaPreflight({ dimension: 'users' })],
+        schema: { body: UserProvision },
+      },
       async (req, reply) => {
         if (!req.tenantCtx) throw new UnauthorizedError('tenant context missing');
         const body = req.body as typeof UserProvision.static;

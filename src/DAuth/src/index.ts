@@ -14,11 +14,17 @@ import {
   type VerifiedClaims,
 } from '@dogan/authz';
 import { NatsRuntime, Outbox, DOGAN_EVENTS_STREAM, DOGAN_EVENTS_SUBJECT, consumerName } from '@dogan/events';
+import { getDauthMetrics, renderMetrics } from '@dogan/telemetry';
 import { provisioningRoutes } from './provisioning.js';
 import { sessionRoutes } from './sessions.js';
 import { apiKeyRoutes } from './api-keys.js';
 import { abacRoutes } from './abac-routes.js';
 import { kcEventRoutes } from './kc-events.js';
+import { registerApiKeyAuth } from './api-key-auth.js';
+import { makeRequireAbac, makeRuntimeSodGuard } from './require-abac.js';
+import { makeQuotaPreflight } from './quotas.js';
+import { startSessionSweeper } from './session-sweeper.js';
+import { probeAll } from './health-probe.js';
 import { ForbiddenError, UnauthorizedError } from '@dogan/contracts';
 import type { KernelConfig } from '@dogan/config';
 import type { Logger } from '@dogan/telemetry';
@@ -36,6 +42,9 @@ export interface DAuthApi {
   fga: OpenFgaClient;
   risk: RiskEngine;
   requireRelation: (relation: string, object: string | ((req: FastifyRequest) => string)) => preHandlerHookHandler;
+  requireAbac: ReturnType<typeof makeRequireAbac>;
+  runtimeSodGuard: ReturnType<typeof makeRuntimeSodGuard>;
+  quotaPreflight: ReturnType<typeof makeQuotaPreflight>;
   recordEvent: (
     db: Kysely<Database>,
     ctx: TenantContext,
@@ -72,6 +81,9 @@ const dauthPlugin: FastifyPluginAsync<DAuthPillarOptions> = async (app, opts) =>
 
   const risk = new RiskEngine(app.kernel?.agents);
 
+  const metrics = getDauthMetrics();
+  registerApiKeyAuth(app);
+
   const requireRelation: DAuthApi['requireRelation'] = (relation, object) => {
     return async (req) => {
       if (!req.claims) throw new UnauthorizedError('missing claims (call authenticate first)');
@@ -81,11 +93,16 @@ const dauthPlugin: FastifyPluginAsync<DAuthPillarOptions> = async (app, opts) =>
         relation,
         object: obj,
       });
+      metrics.authzCheck.inc({ tenant: req.claims.tid, relation, allowed: String(allowed) });
       if (!allowed) {
         throw new ForbiddenError(`${req.claims.sub} ${relation} ${obj}`);
       }
     };
   };
+
+  const requireAbac = makeRequireAbac(app, metrics);
+  const runtimeSodGuard = makeRuntimeSodGuard(app, metrics);
+  const quotaPreflight = makeQuotaPreflight(app);
 
   const recordEvent: DAuthApi['recordEvent'] = async (db, ctx, event) => {
     const signal: AuthSignal = {
@@ -130,11 +147,14 @@ const dauthPlugin: FastifyPluginAsync<DAuthPillarOptions> = async (app, opts) =>
           (${eventId}::uuid, ${ctx.tenantId}::uuid, ${decision.score},
            ${decision.band}, ${JSON.stringify(decision.factors)}::jsonb, ${decision.model})
       `.execute(tx);
+      metrics.riskScored.inc({ tenant: ctx.tenantId, band: decision.band });
+      if (event.kind === 'login.success') metrics.authSuccess.inc({ tenant: ctx.tenantId, kind: event.kind });
+      if (event.kind === 'login.failure') metrics.authFailure.inc({ tenant: ctx.tenantId, reason: 'credentials' });
       return { eventId, risk: decision };
     });
   };
 
-  const api: DAuthApi = { jwt, fga, risk, requireRelation, recordEvent };
+  const api: DAuthApi = { jwt, fga, risk, requireRelation, requireAbac, runtimeSodGuard, quotaPreflight, recordEvent };
   app.decorate('dauth', api);
 
   // ---------- Event bus wiring ----------
@@ -149,7 +169,12 @@ const dauthPlugin: FastifyPluginAsync<DAuthPillarOptions> = async (app, opts) =>
   await nats.ensureConsumer(DOGAN_EVENTS_STREAM, { durable_name: consumerName('dauth', 'relay') });
   const outbox = new Outbox(app.kernel.db, nats, opts.logger);
   const stopRelay = outbox.startRelay({ batchSize: 100, pollIntervalMs: 1_000, maxAttempts: 10 });
-  app.addHook('onClose', async () => { await stopRelay(); await nats.close(); });
+  const stopSweeper = startSessionSweeper({
+    db: app.kernel.db, outbox, logger: opts.logger, intervalMs: 60_000,
+  });
+  app.addHook('onClose', async () => {
+    await stopSweeper(); await stopRelay(); await nats.close();
+  });
 
   // ---------- Admin clients for provisioning ----------
   const fgaAdmin = new OpenFgaAdmin({ apiUrl: opts.config.OPENFGA_URL });
@@ -173,15 +198,32 @@ const dauthPlugin: FastifyPluginAsync<DAuthPillarOptions> = async (app, opts) =>
   await app.register(kcEventRoutes(outbox, opts.config.KEYCLOAK_EVENTS_HMAC_SECRET));
 
   // ---------- Routes ----------
-  app.get('/pillars/dauth/health', async () => ({
-    pillar: 'DAuth',
-    status: 'ok',
-    issuer: opts.config.JWT_ISSUER,
-    audience: opts.config.JWT_AUDIENCE,
-    jwks: Boolean(opts.config.JWT_JWKS_URL),
-    fga: Boolean(opts.config.OPENFGA_STORE_ID),
-    riskEngine: 'rule.v1+ai-augmented',
-  }));
+  app.get('/pillars/dauth/health', async (_req, reply) => {
+    const probes = await probeAll({
+      db: app.kernel.db,
+      nats,
+      keycloakUrl: `${opts.config.KEYCLOAK_BASE_URL}/realms/${opts.config.KEYCLOAK_REALM}`,
+      openFgaUrl: opts.config.OPENFGA_URL,
+      metrics,
+    });
+    const ok = Object.values(probes).every((p) => p.ok);
+    reply.code(ok ? 200 : 503);
+    return {
+      pillar: 'DAuth',
+      status: ok ? 'ok' : 'degraded',
+      issuer: opts.config.JWT_ISSUER,
+      audience: opts.config.JWT_AUDIENCE,
+      jwks: Boolean(opts.config.JWT_JWKS_URL),
+      fga: Boolean(opts.config.OPENFGA_STORE_ID),
+      riskEngine: 'rule.v1+ai-augmented',
+      components: probes,
+    };
+  });
+
+  app.get('/pillars/dauth/metrics', async (_req, reply) => {
+    reply.header('content-type', 'text/plain; version=0.0.4');
+    return await renderMetrics();
+  });
 
   app.get(
     '/pillars/dauth/whoami',
