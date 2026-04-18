@@ -86,8 +86,10 @@ DAuth:
 - [x] Consult notes hardened with `requireRelation('reader'|'writer','product:consult')`.
 - [x] DAuth contract tests green (tampered token, empty tid, well-formed token).
 - [x] Idempotent bootstrap scripts: `tools/dauth/bootstrap-keycloak.mjs`, `tools/dauth/bootstrap-openfga.mjs`; realm spec + FGA model checked in.
-- [ ] Keycloak realm provisioned + JWKS URL in env (infra task, not code).
-- [ ] OpenFGA store + model created (infra task).
+- [x] Keycloak 26.5 native (Java 21) on PG18 5432, systemd `keycloak.service`, realm `dogan` + client `dogan-kernel` + audience/tid/products/roles mappers provisioned, JWKS URL wired in `/etc/dogan-ai-os/kernel.env`.
+- [x] OpenFGA store `dogan-ai-os` + authorization model created; `OPENFGA_STORE_ID` + `OPENFGA_MODEL_ID` wired in env.
+- [x] Composer running under pm2 as `dogan-os`; `/platform`, `/kernel/ready`, `/kernel/capabilities`, all four `/pillars/*/health` return 200; unauthenticated `/pillars/dauth/whoami` returns 401.
+- [x] PG14 legacy cluster dropped; PG18 master is the only PostgreSQL on the host (5432).
 
 DSOC:
 - [x] Audit hook on every mutating verb with tenant + user + reqId.
