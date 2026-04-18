@@ -37,12 +37,14 @@ async function main() {
     );
   });
 
-  app.get('/platform', async () => ({
+  const platformBanner = () => ({
     platform: 'Dogan AI OS',
     kernel: config.KERNEL_VERSION,
     pillars: ['DAuth', 'DOS', 'DSOC', 'DNOC'],
     products: app.kernelLoadedProducts ?? [],
-  }));
+  });
+  app.get('/', async () => platformBanner());
+  app.get('/platform', async () => platformBanner());
 
   const shutdown = async (signal: string) => {
     telemetry.logger.info({ signal }, 'shutting down platform');
