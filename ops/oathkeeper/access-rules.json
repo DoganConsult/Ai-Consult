@@ -1,0 +1,32 @@
+[
+  {
+    "id": "kernel:public-health",
+    "match": {
+      "url": "<.*>/(platform|kernel/ready|metrics)",
+      "methods": ["GET"]
+    },
+    "authenticators": [{ "handler": "anonymous" }],
+    "authorizer": { "handler": "allow" },
+    "mutators": [{ "handler": "noop" }]
+  },
+  {
+    "id": "kernel:pillars-authn",
+    "match": {
+      "url": "<.*>/pillars/.*",
+      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+    },
+    "authenticators": [{ "handler": "jwt" }],
+    "authorizer": { "handler": "allow" },
+    "mutators": [{ "handler": "header" }]
+  },
+  {
+    "id": "products:authn",
+    "match": {
+      "url": "<.*>/products/.*",
+      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+    },
+    "authenticators": [{ "handler": "jwt" }],
+    "authorizer": { "handler": "allow" },
+    "mutators": [{ "handler": "header" }]
+  }
+]

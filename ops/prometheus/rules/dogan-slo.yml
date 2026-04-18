@@ -1,0 +1,46 @@
+groups:
+  - name: dogan-ai-os-slo
+    rules:
+      # SLI: kernel readiness (any component down counts as unavailable)
+      - record: dogan:availability:ratio_5m
+        expr: avg_over_time(dogan_component_up[5m])
+      - record: dogan:availability:ratio_1h
+        expr: avg_over_time(dogan_component_up[1h])
+      - record: dogan:availability:ratio_6h
+        expr: avg_over_time(dogan_component_up[6h])
+
+      # SLO target = 99.9% availability per component.
+      # Burn-rate alerts (Google SRE multi-window):
+      #   fast burn: 14.4x in 5m AND 1h windows  -> page (critical)
+      #   slow burn: 6x  in 30m AND 6h windows   -> ticket (warning)
+      - alert: DoganSLOAvailabilityFastBurn
+        expr: |
+          (1 - dogan:availability:ratio_5m) > (14.4 * 0.001)
+          and
+          (1 - dogan:availability:ratio_1h) > (14.4 * 0.001)
+        for: 2m
+        labels: { severity: critical, service: dogan-ai-os, slo: availability }
+        annotations:
+          summary: "SLO fast burn on {{ $labels.component }}"
+          description: "Error budget burning >14.4x in both 5m and 1h windows."
+
+      - alert: DoganSLOAvailabilitySlowBurn
+        expr: |
+          (1 - avg_over_time(dogan_component_up[30m])) > (6 * 0.001)
+          and
+          (1 - dogan:availability:ratio_6h) > (6 * 0.001)
+        for: 15m
+        labels: { severity: warning, service: dogan-ai-os, slo: availability }
+        annotations:
+          summary: "SLO slow burn on {{ $labels.component }}"
+
+      # SLI: HTTP latency (p99 < 500ms target)
+      - record: dogan:http_latency:p99_5m
+        expr: histogram_quantile(0.99, sum by (le, pillar, route) (rate(dogan_http_request_duration_seconds_bucket[5m])))
+
+      - alert: DoganLatencyP99High
+        expr: dogan:http_latency:p99_5m > 0.5
+        for: 10m
+        labels: { severity: warning, service: dogan-ai-os, slo: latency }
+        annotations:
+          summary: "p99 latency > 500ms on {{ $labels.pillar }}{{ $labels.route }}"

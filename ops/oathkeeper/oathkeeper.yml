@@ -1,0 +1,62 @@
+log:
+  level: info
+  format: json
+
+serve:
+  proxy:
+    port: 4455
+    host: 127.0.0.1
+  api:
+    port: 4456
+    host: 127.0.0.1
+
+errors:
+  fallback:
+    - json
+  handlers:
+    json:
+      enabled: true
+      config:
+        verbose: false
+
+access_rules:
+  matching_strategy: regexp
+  repositories:
+    - file:///etc/oathkeeper/access-rules.json
+
+authenticators:
+  jwt:
+    enabled: true
+    config:
+      jwks_urls:
+        - http://127.0.0.1:8090/realms/dogan/protocol/openid-connect/certs
+      trusted_issuers:
+        - http://127.0.0.1:8090/realms/dogan
+      target_audience:
+        - dogan-kernel
+      scope_strategy: exact
+      token_from:
+        header: Authorization
+  noop:
+    enabled: true
+  anonymous:
+    enabled: true
+    config:
+      subject: anonymous
+
+authorizers:
+  allow:
+    enabled: true
+  deny:
+    enabled: true
+
+mutators:
+  header:
+    enabled: true
+    config:
+      headers:
+        X-User: "{{ print .Subject }}"
+        X-Tenant: "{{ print .Extra.tid }}"
+        X-Subject: "{{ print .Subject }}"
+  noop:
+    enabled: true

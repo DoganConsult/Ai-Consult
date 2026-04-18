@@ -1,0 +1,46 @@
+#!/usr/sbin/nft -f
+# Dogan AI OS firewall: default-deny inbound, public ingress only on 80/443.
+# All internal services (PG/NATS/Keycloak/OpenFGA/Temporal/MinIO/Prometheus/etc.)
+# are bound to 127.0.0.1 by config; this firewall is a second line of defense.
+
+flush ruleset
+
+table inet filter {
+    set admin_ssh_v4 {
+        type ipv4_addr
+        flags interval
+        # Edit to your operator CIDRs; default: allow all (rely on SSH key auth + fail2ban).
+        elements = { 0.0.0.0/0 }
+    }
+
+    chain input {
+        type filter hook input priority filter; policy drop;
+
+        iifname "lo" accept
+        ct state established,related accept
+        ct state invalid drop
+
+        # ICMP / ICMPv6
+        ip protocol icmp icmp type { echo-request, destination-unreachable, time-exceeded } accept
+        ip6 nexthdr icmpv6 accept
+
+        # SSH (rate-limited)
+        tcp dport 22 ip saddr @admin_ssh_v4 ct state new limit rate 10/minute accept
+        tcp dport 22 ct state new limit rate 10/minute accept
+
+        # Public HTTP/HTTPS (Caddy)
+        tcp dport { 80, 443 } accept
+
+        # Block everything else explicitly
+        limit rate 5/minute log prefix "nft-drop: "
+        reject with icmpx type admin-prohibited
+    }
+
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+    }
+
+    chain output {
+        type filter hook output priority filter; policy accept;
+    }
+}

@@ -1,0 +1,25 @@
+[Unit]
+Description=Ory Oathkeeper - identity & access proxy for Dogan AI OS
+After=network-online.target keycloak.service
+Wants=keycloak.service
+
+[Service]
+Type=simple
+User=oathkeeper
+Group=oathkeeper
+ExecStart=/usr/local/bin/oathkeeper serve --config /etc/oathkeeper/oathkeeper.yml
+Restart=on-failure
+RestartSec=3s
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/log/oathkeeper
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

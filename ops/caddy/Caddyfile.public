@@ -1,0 +1,101 @@
+{
+	admin 127.0.0.1:2019
+	email ops@dogan-ai.os
+	servers {
+		protocols h1 h2 h3
+		strict_sni_host on
+	}
+	log default {
+		output file /var/log/caddy/access.log {
+			roll_size 100mb
+			roll_keep 14
+		}
+		format json
+	}
+}
+
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		Content-Security-Policy "default-src 'self'; frame-ancestors 'none'; base-uri 'self'"
+		-Server
+	}
+}
+
+(rate_limit) {
+	@hot path /pillars/dauth/* /pillars/dsoc/* /pillars/dnoc/*
+	rate_limit @hot {
+		zone hot 100r/m
+	}
+}
+
+(forward_auth_oathkeeper) {
+	forward_auth 127.0.0.1:4456 {
+		uri /decisions
+		copy_headers Authorization X-User X-Tenant X-Subject
+	}
+}
+
+# ---- Public kernel surface ----
+api.dogan-ai.os {
+	import security_headers
+	encode zstd gzip
+
+	# Public health (no auth)
+	handle /platform {
+		reverse_proxy 127.0.0.1:3100
+	}
+	handle /kernel/ready {
+		reverse_proxy 127.0.0.1:3100
+	}
+
+	# Authenticated kernel surface — Oathkeeper enforces JWT/scope
+	handle /pillars/* {
+		import forward_auth_oathkeeper
+		reverse_proxy 127.0.0.1:3100
+	}
+	handle /products/* {
+		import forward_auth_oathkeeper
+		reverse_proxy 127.0.0.1:3100
+	}
+
+	handle {
+		respond "not found" 404
+	}
+}
+
+# ---- Identity (Keycloak public) ----
+auth.dogan-ai.os {
+	import security_headers
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8090
+}
+
+# ---- Operator surfaces (mTLS or basic auth in front; restricted by nft to admin CIDR) ----
+ops.dogan-ai.os {
+	import security_headers
+	encode zstd gzip
+	basic_auth {
+		# operator passwords managed via sops -> /etc/caddy/operators
+		import /etc/caddy/operators
+	}
+	handle_path /grafana/* {
+		reverse_proxy 127.0.0.1:3001
+	}
+	handle_path /prometheus/* {
+		reverse_proxy 127.0.0.1:9090
+	}
+	handle_path /alerts/* {
+		reverse_proxy 127.0.0.1:9093
+	}
+	handle_path /temporal/* {
+		reverse_proxy 127.0.0.1:7243
+	}
+	handle {
+		respond "ops" 200
+	}
+}
