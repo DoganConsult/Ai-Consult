@@ -1,9 +1,9 @@
-!**/.env.example
-!ops/secrets/*.enc.env
-**/.env.bak.*
-*.bak
 *.env
 *.env.bak.*
+**/.env.bak.*
+*.bak
+!**/.env.example
+!ops/secrets/*.enc.env
 *.tsbuildinfo
 .bak.*
 .nx/

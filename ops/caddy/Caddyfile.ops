@@ -1,0 +1,101 @@
+{
+	admin off
+	auto_https off
+}
+
+(secops_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+(operator_auth) {
+	basic_auth {
+		admin "$2a$REDACTED_HASH"
+	}
+}
+
+http://127.0.0.1:8088 {
+	bind 127.0.0.1
+	import secops_headers
+	log {
+		output file /var/log/caddy/ops-access.log {
+			roll_size 50mb
+			roll_keep 14
+		}
+		format json
+	}
+
+	handle /gateway/health {
+		respond "dogan-ai-os gateway: ok" 200
+	}
+
+	handle /pg/info {
+		import operator_auth
+		respond "PG18 master @ 127.0.0.1:5432" 200
+	}
+	handle_path /ai/* {
+		import operator_auth
+		reverse_proxy 127.0.0.1:4000
+	}
+	handle_path /authz/* {
+		import operator_auth
+		reverse_proxy 127.0.0.1:8080
+	}
+	handle_path /temporal/* {
+		import operator_auth
+		reverse_proxy 127.0.0.1:7243
+	}
+	handle_path /analytics/* {
+		import operator_auth
+		reverse_proxy 127.0.0.1:8123
+	}
+	handle_path /s3/* {
+		import operator_auth
+		reverse_proxy 127.0.0.1:9100
+	}
+	handle_path /s3-console/* {
+		import operator_auth
+		reverse_proxy 127.0.0.1:9101
+	}
+	handle /metrics {
+		import operator_auth
+		reverse_proxy 127.0.0.1:9464
+	}
+	handle_path /otlp/* {
+		import operator_auth
+		reverse_proxy 127.0.0.1:4318
+	}
+	handle_path /metrics-prom/* {
+		import operator_auth
+		reverse_proxy 127.0.0.1:9090
+	}
+	handle_path /grafana/* {
+		import operator_auth
+		reverse_proxy 127.0.0.1:3001
+	}
+	handle_path /alerts/* {
+		import operator_auth
+		reverse_proxy 127.0.0.1:9093
+	}
+	handle_path /powa/* {
+		import operator_auth
+		reverse_proxy 127.0.0.1:8889
+	}
+	handle_path /pgbadger/* {
+		import operator_auth
+		root * /var/lib/pgbadger
+		file_server browse
+	}
+	handle_path /llm-local/* {
+		import operator_auth
+		reverse_proxy 127.0.0.1:11434
+	}
+	handle {
+		respond "unknown route" 404
+	}
+}
