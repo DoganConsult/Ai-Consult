@@ -35,11 +35,19 @@ const clientUuid = await admin.ensureClient(realm, {
   standardFlowEnabled: true,
   directAccessGrantsEnabled: false,
   implicitFlowEnabled: false,
-  redirectUris: [redirectUri, redirectUri.replace(/\/auth\/callback$/, '/*')],
-  webOrigins: [webOrigin, '+'],
+  redirectUris: [
+    redirectUri,
+    redirectUri.replace(/\/auth\/callback$/, '/*'),
+    redirectUri.replace('://', '://www.'),
+    redirectUri.replace('://', '://www.').replace(/\/auth\/callback$/, '/*'),
+  ],
+  webOrigins: [webOrigin, webOrigin.replace('://', '://www.'), '+'],
   attributes: {
     'pkce.code.challenge.method': 'S256',
-    'post.logout.redirect.uris': postLogout + '##' + postLogout + '*',
+    'post.logout.redirect.uris': [
+      postLogout, postLogout + '*',
+      postLogout.replace('://', '://www.'), postLogout.replace('://', '://www.') + '*',
+    ].join('##'),
     'access.token.lifespan': '600',
   },
 });
