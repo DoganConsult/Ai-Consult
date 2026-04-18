@@ -1,15 +1,54 @@
 import fp from 'fastify-plugin';
-import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { JwtVerifier, OpenFgaClient } from '@dogan/authz';
+import 'fastify';
+import type { FastifyPluginAsync, FastifyRequest, preHandlerHookHandler } from 'fastify';
+import { sql } from 'kysely';
+import { Type } from '@sinclair/typebox';
+import {
+  JwtVerifier,
+  OpenFgaClient,
+  RiskEngine,
+  type AuthSignal,
+  type RiskDecision,
+  type VerifiedClaims,
+} from '@dogan/authz';
+import { ForbiddenError, UnauthorizedError } from '@dogan/contracts';
 import type { KernelConfig } from '@dogan/config';
 import type { Logger } from '@dogan/telemetry';
+import type { Database, TenantContext } from '@dogan/db';
+import type { Kysely } from 'kysely';
+import '@dogan/kernel';
 
 export interface DAuthPillarOptions {
   config: KernelConfig;
   logger: Logger;
 }
 
-const dauthPlugin: FastifyPluginAsync<DAuthPillarOptions> = async (app: FastifyInstance, opts) => {
+export interface DAuthApi {
+  jwt: JwtVerifier;
+  fga: OpenFgaClient;
+  risk: RiskEngine;
+  requireRelation: (relation: string, object: string | ((req: FastifyRequest) => string)) => preHandlerHookHandler;
+  recordEvent: (
+    db: Kysely<Database>,
+    ctx: TenantContext,
+    event: AuthEventInput,
+  ) => Promise<{ eventId: string; risk: RiskDecision }>;
+}
+
+export interface AuthEventInput {
+  kind: AuthSignal['kind'];
+  ip?: string;
+  userAgent?: string;
+  country?: string;
+  requestId?: string;
+  meta?: Record<string, unknown>;
+  knownIps?: string[];
+  knownCountries?: string[];
+  recentFailures?: number;
+  isNewDevice?: boolean;
+}
+
+const dauthPlugin: FastifyPluginAsync<DAuthPillarOptions> = async (app, opts) => {
   const jwt = new JwtVerifier({
     issuer: opts.config.JWT_ISSUER,
     audience: opts.config.JWT_AUDIENCE,
@@ -23,21 +62,181 @@ const dauthPlugin: FastifyPluginAsync<DAuthPillarOptions> = async (app: FastifyI
     modelId: opts.config.OPENFGA_MODEL_ID,
   });
 
-  app.decorate('dauth', { jwt, fga });
+  const risk = new RiskEngine(app.kernel?.agents);
 
+  const requireRelation: DAuthApi['requireRelation'] = (relation, object) => {
+    return async (req) => {
+      if (!req.claims) throw new UnauthorizedError('missing claims (call authenticate first)');
+      const obj = typeof object === 'function' ? object(req) : object;
+      const allowed = await fga.check({
+        user: `user:${req.claims.sub}`,
+        relation,
+        object: obj,
+      });
+      if (!allowed) {
+        throw new ForbiddenError(`${req.claims.sub} ${relation} ${obj}`);
+      }
+    };
+  };
+
+  const recordEvent: DAuthApi['recordEvent'] = async (db, ctx, event) => {
+    const signal: AuthSignal = {
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      kind: event.kind,
+      ip: event.ip,
+      userAgent: event.userAgent,
+      country: event.country,
+      knownIps: event.knownIps,
+      knownCountries: event.knownCountries,
+      recentFailures: event.recentFailures,
+      hourOfDayUtc: new Date().getUTCHours(),
+      isNewDevice: event.isNewDevice,
+    };
+    const decision = await risk.score(signal);
+
+    return await db.transaction().execute(async (tx) => {
+      await sql`select set_config('app.tenant_id', ${ctx.tenantId}, true)`.execute(tx);
+      if (ctx.userId) {
+        await sql`select set_config('app.user_id', ${ctx.userId}, true)`.execute(tx);
+      }
+      const ins = await sql<{ id: string }>`
+        insert into platform.auth_events
+          (tenant_id, user_id, kind, client_ip, user_agent, country, request_id, meta)
+        values
+          (${ctx.tenantId}::uuid,
+           ${ctx.userId ?? null}::uuid,
+           ${event.kind},
+           ${event.ip ?? null}::inet,
+           ${event.userAgent ?? null},
+           ${event.country ?? null},
+           ${event.requestId ?? null},
+           ${JSON.stringify(event.meta ?? {})}::jsonb)
+        returning id::text
+      `.execute(tx);
+      const eventId = ins.rows[0]!.id;
+      await sql`
+        insert into platform.dauth_risk_scores
+          (event_id, tenant_id, score, band, factors, model)
+        values
+          (${eventId}::uuid, ${ctx.tenantId}::uuid, ${decision.score},
+           ${decision.band}, ${JSON.stringify(decision.factors)}::jsonb, ${decision.model})
+      `.execute(tx);
+      return { eventId, risk: decision };
+    });
+  };
+
+  const api: DAuthApi = { jwt, fga, risk, requireRelation, recordEvent };
+  app.decorate('dauth', api);
+
+  // ---------- Routes ----------
   app.get('/pillars/dauth/health', async () => ({
     pillar: 'DAuth',
     status: 'ok',
     issuer: opts.config.JWT_ISSUER,
-    fgaConfigured: Boolean(opts.config.OPENFGA_STORE_ID),
+    audience: opts.config.JWT_AUDIENCE,
+    jwks: Boolean(opts.config.JWT_JWKS_URL),
+    fga: Boolean(opts.config.OPENFGA_STORE_ID),
+    riskEngine: 'rule.v1+ai-augmented',
   }));
+
+  app.get(
+    '/pillars/dauth/whoami',
+    { preHandler: [app.authenticate] },
+    async (req) => ({
+      sub: req.claims!.sub,
+      tid: req.claims!.tid,
+      email: req.claims!.email,
+      products: req.claims!.products,
+      roles: req.claims!.roles,
+    }),
+  );
+
+  app.post(
+    '/pillars/dauth/check',
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        body: Type.Object({
+          relation: Type.String({ minLength: 1 }),
+          object:   Type.String({ minLength: 1, pattern: '^[a-z_]+:[A-Za-z0-9_.\\-]+$' }),
+        }),
+        response: { 200: Type.Object({ allowed: Type.Boolean() }) },
+      },
+    },
+    async (req) => {
+      const { relation, object } = req.body as { relation: string; object: string };
+      const allowed = await fga.check({
+        user: `user:${req.claims!.sub}`,
+        relation,
+        object,
+      });
+      return { allowed };
+    },
+  );
+
+  app.post(
+    '/pillars/dauth/auth-events',
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        body: Type.Object({
+          kind: Type.Union([
+            Type.Literal('login.success'), Type.Literal('login.failure'),
+            Type.Literal('login.mfa_required'), Type.Literal('login.mfa_success'),
+            Type.Literal('token.refresh'), Type.Literal('token.revoke'),
+            Type.Literal('session.expire'),
+            Type.Literal('authz.deny'), Type.Literal('authz.allow'),
+          ]),
+          country:        Type.Optional(Type.String({ maxLength: 4 })),
+          isNewDevice:    Type.Optional(Type.Boolean()),
+          recentFailures: Type.Optional(Type.Integer({ minimum: 0, maximum: 1000 })),
+          knownIps:       Type.Optional(Type.Array(Type.String(), { maxItems: 32 })),
+          knownCountries: Type.Optional(Type.Array(Type.String(), { maxItems: 32 })),
+          meta:           Type.Optional(Type.Record(Type.String(), Type.Unknown())),
+        }),
+        response: {
+          201: Type.Object({
+            eventId: Type.String({ format: 'uuid' }),
+            risk: Type.Object({
+              score: Type.Integer(),
+              band: Type.Union([
+                Type.Literal('low'), Type.Literal('medium'),
+                Type.Literal('high'), Type.Literal('critical'),
+              ]),
+              factors: Type.Record(Type.String(), Type.Number()),
+              model: Type.String(),
+            }),
+          }),
+        },
+      },
+    },
+    async (req, reply) => {
+      if (!req.tenantCtx) throw new UnauthorizedError('tenant context missing');
+      const body = req.body as Omit<AuthEventInput, 'ip' | 'userAgent' | 'requestId'>;
+      const out = await recordEvent(app.kernel.db, req.tenantCtx, {
+        ...body,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        requestId: req.id,
+      });
+      reply.code(201);
+      return out;
+    },
+  );
 };
 
-export const dauthPillar = fp(dauthPlugin, { name: 'dogan-dauth' });
+export const dauthPillar = fp(dauthPlugin, { name: 'dogan-dauth', dependencies: [] });
 
 declare module 'fastify' {
   interface FastifyInstance {
-    dauth?: { jwt: JwtVerifier; fga: OpenFgaClient };
+    dauth: DAuthApi;
+    authenticate: (req: FastifyRequest) => Promise<void>;
+    kernel: import('@dogan/kernel').KernelServices;
+  }
+  interface FastifyRequest {
+    claims?: VerifiedClaims;
+    tenantCtx?: TenantContext;
   }
 }
 

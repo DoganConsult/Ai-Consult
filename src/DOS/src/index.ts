@@ -3,7 +3,7 @@ import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import type { KernelConfig } from '@dogan/config';
 import type { Logger } from '@dogan/telemetry';
 
-export { buildKernel } from '@dogan/kernel';
+export { buildKernel, loadKernelProducts } from '@dogan/kernel';
 
 export interface DOSPillarOptions {
   config: KernelConfig;

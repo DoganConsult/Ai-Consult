@@ -9,6 +9,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@dogan/dauth": "workspace:*",
     "@dogan/contracts": "workspace:*",
     "@dogan/db": "workspace:*",
     "@dogan/kernel": "workspace:*",

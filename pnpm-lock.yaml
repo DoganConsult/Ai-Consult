@@ -48,9 +48,15 @@ importers:
 
   packages/authz:
     dependencies:
+      '@dogan/agents':
+        specifier: workspace:*
+        version: link:../agents
       '@dogan/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@dogan/telemetry':
+        specifier: workspace:*
+        version: link:../telemetry
       jose:
         specifier: 5.9.6
         version: 5.9.6
@@ -170,6 +176,9 @@ importers:
 
   packages/kernel-testkit:
     dependencies:
+      '@dogan/authz':
+        specifier: workspace:*
+        version: link:../authz
       '@dogan/db':
         specifier: workspace:*
         version: link:../db
@@ -245,6 +254,9 @@ importers:
       '@dogan/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@dogan/dauth':
+        specifier: workspace:*
+        version: link:../../src/DAuth
       '@dogan/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -301,15 +313,27 @@ importers:
       '@dogan/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@dogan/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@dogan/kernel':
+        specifier: workspace:*
+        version: link:../../packages/kernel
       '@dogan/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
+      '@sinclair/typebox':
+        specifier: 0.33.22
+        version: 0.33.22
       fastify:
         specifier: 5.2.0
         version: 5.2.0
       fastify-plugin:
         specifier: 5.0.1
         version: 5.0.1
+      kysely:
+        specifier: 0.27.5
+        version: 0.27.5
     devDependencies:
       typescript:
         specifier: 5.6.3

@@ -139,13 +139,23 @@ export async function buildKernel(opts: BuildKernelOptions): Promise<FastifyInst
     reply.status(status).send({ error: { code, message: err.message } });
   });
 
-  // ------------ Load products ------------
-  const loaded = await loadProducts(app as unknown as FastifyInstance, services, config);
+  return app as unknown as FastifyInstance;
+}
+
+/**
+ * loadKernelProducts must be called AFTER all pillar plugins (DAuth/DSOC/DNOC)
+ * have registered, so that products mounting their modules can use
+ * `app.dauth`, audit hooks, etc.
+ */
+export async function loadKernelProducts(
+  app: FastifyInstance,
+  config: KernelConfig,
+): Promise<void> {
+  const services = (app as unknown as { kernel: KernelServices }).kernel;
+  const loaded = await loadProducts(app, services, config);
   (app as unknown as { kernelLoadedProducts: string[] }).kernelLoadedProducts = loaded.map(
     (p) => `${p.id}@${p.version}`,
   );
-
-  return app as unknown as FastifyInstance;
 }
 
 // used for typing the decorator above without circular import

@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.1",
+  "type_definitions": [
+    { "type": "user", "relations": {}, "metadata": null },
+    {
+      "type": "tenant",
+      "relations": {
+        "admin":  { "this": {} },
+        "member": { "this": {} }
+      },
+      "metadata": {
+        "relations": {
+          "admin":  { "directly_related_user_types": [{ "type": "user" }] },
+          "member": { "directly_related_user_types": [{ "type": "user" }] }
+        }
+      }
+    },
+    {
+      "type": "product",
+      "relations": {
+        "tenant": { "this": {} },
+        "reader": {
+          "union": {
+            "child": [
+              { "this": {} },
+              { "tupleToUserset": { "tupleset": { "object": "", "relation": "tenant" }, "computedUserset": { "object": "", "relation": "admin" } } },
+              { "tupleToUserset": { "tupleset": { "object": "", "relation": "tenant" }, "computedUserset": { "object": "", "relation": "member" } } }
+            ]
+          }
+        },
+        "writer": {
+          "union": {
+            "child": [
+              { "this": {} },
+              { "tupleToUserset": { "tupleset": { "object": "", "relation": "tenant" }, "computedUserset": { "object": "", "relation": "admin" } } }
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "tenant": { "directly_related_user_types": [{ "type": "tenant" }] },
+          "reader": { "directly_related_user_types": [{ "type": "user" }] },
+          "writer": { "directly_related_user_types": [{ "type": "user" }] }
+        }
+      }
+    },
+    {
+      "type": "module",
+      "relations": {
+        "product": { "this": {} },
+        "reader": {
+          "union": {
+            "child": [
+              { "this": {} },
+              { "tupleToUserset": { "tupleset": { "object": "", "relation": "product" }, "computedUserset": { "object": "", "relation": "reader" } } }
+            ]
+          }
+        },
+        "writer": {
+          "union": {
+            "child": [
+              { "this": {} },
+              { "tupleToUserset": { "tupleset": { "object": "", "relation": "product" }, "computedUserset": { "object": "", "relation": "writer" } } }
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "product": { "directly_related_user_types": [{ "type": "product" }] },
+          "reader":  { "directly_related_user_types": [{ "type": "user" }] },
+          "writer":  { "directly_related_user_types": [{ "type": "user" }] }
+        }
+      }
+    }
+  ]
+}

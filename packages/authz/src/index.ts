@@ -64,7 +64,7 @@ export class JwtVerifier {
   private coerce(payload: JWTPayload): VerifiedClaims {
     if (!payload.sub) throw new UnauthorizedError('sub missing');
     const tid = (payload as Record<string, unknown>).tid;
-    if (typeof tid !== 'string') throw new UnauthorizedError('tid missing');
+    if (typeof tid !== 'string' || tid.length === 0) throw new UnauthorizedError('tid missing');
     const products = ((payload as Record<string, unknown>).products ?? []) as string[];
     const roles = ((payload as Record<string, unknown>).roles ?? []) as string[];
     return {
@@ -158,3 +158,9 @@ export class OpenFgaClient implements AuthzClient {
 }
 
 export type { Platform };
+export { KeycloakAdmin } from './keycloak-admin.js';
+export type { KeycloakAdminOptions } from './keycloak-admin.js';
+export { OpenFgaAdmin } from './openfga-admin.js';
+export type { OpenFgaAdminOptions, FgaTuple } from './openfga-admin.js';
+export { RiskEngine } from './risk.js';
+export type { AuthSignal, RiskBand, RiskDecision } from './risk.js';

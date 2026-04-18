@@ -80,6 +80,12 @@ DOS:
 
 DAuth:
 - [x] JWT verifier (JWKS or dev secret), OpenFGA client wired, decorated on Fastify.
+- [x] DAuth pillar: `requireRelation` preHandler, `recordEvent` (auth_events + dauth_risk_scores under SET LOCAL), routes `/pillars/dauth/{health,whoami,check,auth-events}`.
+- [x] RiskEngine: rule.v1 baseline + LangChain/LiteLLM AI enrichment via kernel-built-in agents.
+- [x] Migration `0002_dauth.sql` applied: `user_external_ids`, `auth_events` (append-only), `dauth_risk_scores`, `role_assignments` — all FORCE-RLS, tenant-scoped.
+- [x] Consult notes hardened with `requireRelation('reader'|'writer','product:consult')`.
+- [x] DAuth contract tests green (tampered token, empty tid, well-formed token).
+- [x] Idempotent bootstrap scripts: `tools/dauth/bootstrap-keycloak.mjs`, `tools/dauth/bootstrap-openfga.mjs`; realm spec + FGA model checked in.
 - [ ] Keycloak realm provisioned + JWKS URL in env (infra task, not code).
 - [ ] OpenFGA store + model created (infra task).
 

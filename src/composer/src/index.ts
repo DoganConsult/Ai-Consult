@@ -1,6 +1,6 @@
 import { loadConfig } from '@dogan/config';
 import { initTelemetry } from '@dogan/telemetry';
-import { buildKernel, dosPillar } from '@dogan/dos';
+import { buildKernel, loadKernelProducts, dosPillar } from '@dogan/dos';
 import { dauthPillar } from '@dogan/dauth';
 import { dsocPillar } from '@dogan/dsoc';
 import { dnocPillar } from '@dogan/dnoc';
@@ -23,6 +23,10 @@ async function main() {
   await app.register(dauthPillar, { config, logger: telemetry.logger });
   await app.register(dsocPillar, { config, logger: telemetry.logger });
   await app.register(dnocPillar, { config, logger: telemetry.logger });
+
+  // Products mount AFTER all pillars are registered so they can use
+  // app.dauth (requireRelation), DSOC audit hooks, etc.
+  await loadKernelProducts(app, config);
 
   // Top-level platform identity.
   app.addHook('onSend', async (_req, reply) => {

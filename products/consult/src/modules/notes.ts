@@ -2,6 +2,14 @@ import { Type } from '@sinclair/typebox';
 import { sql } from 'kysely';
 import type { ModulePlugin } from '@dogan/kernel';
 import { TenantContextMissingError } from '@dogan/contracts';
+import type { DAuthApi } from '@dogan/dauth';
+import '@dogan/dauth';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    dauth: DAuthApi;
+  }
+}
 
 const NoteCreate = Type.Object({
   title: Type.String({ minLength: 1, maxLength: 256 }),
@@ -22,9 +30,15 @@ const notesModule: ModulePlugin = async (app, ctx) => {
 
   app.addHook('preHandler', app.authenticate);
 
+  const requireProductReader = app.dauth.requireRelation('reader', 'product:consult');
+  const requireProductWriter = app.dauth.requireRelation('writer', 'product:consult');
+
   app.get(
     '/',
-    { schema: { response: { 200: Type.Array(Note) } } },
+    {
+      preHandler: [requireProductReader],
+      schema: { response: { 200: Type.Array(Note) } },
+    },
     async (req) => {
       if (!req.tenantCtx) throw new TenantContextMissingError();
       return await services.withTenant(req.tenantCtx, async (tx) => {
@@ -47,6 +61,7 @@ const notesModule: ModulePlugin = async (app, ctx) => {
   app.post(
     '/',
     {
+      preHandler: [requireProductWriter],
       schema: {
         body: NoteCreate,
         response: { 201: Note },
