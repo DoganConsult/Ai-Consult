@@ -41,6 +41,7 @@ export const KernelConfigSchema = Type.Object({
   KEYCLOAK_ADMIN_USER: Type.Optional(Type.String()),
   KEYCLOAK_ADMIN_PASSWORD: Type.Optional(Type.String()),
   KEYCLOAK_EVENTS_HMAC_SECRET: Type.Optional(Type.String()),
+  CORS_ALLOWED_ORIGINS: Type.String({ default: '' }),
 });
 
 export type KernelConfig = Static<typeof KernelConfigSchema>;

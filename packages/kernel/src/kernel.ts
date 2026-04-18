@@ -86,7 +86,15 @@ export async function buildKernel(opts: BuildKernelOptions): Promise<FastifyInst
 
   await app.register(sensible);
   await app.register(helmet, { global: true, contentSecurityPolicy: false });
-  await app.register(cors, { origin: false });
+  const allowList = (config.CORS_ALLOWED_ORIGINS ?? '')
+    .split(',').map((s) => s.trim()).filter(Boolean);
+  await app.register(cors, {
+    origin: allowList.length === 0 ? false : allowList,
+    credentials: false,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['authorization', 'content-type', 'accept', 'x-request-id'],
+    maxAge: 600,
+  });
   await app.register(rateLimit, {
     max: 300,
     timeWindow: '1 minute',
