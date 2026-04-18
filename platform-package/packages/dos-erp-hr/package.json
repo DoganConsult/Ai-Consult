@@ -1,0 +1,11 @@
+{
+  "name": "@dos/erp-hr",
+  "version": "1.0.0",
+  "description": "DOS-AIO ERP Microservice: HR Module (Employees, Payroll, Recruitment)",
+  "main": "index.ts",
+  "private": true,
+  "dependencies": {
+    "@dos/types": "workspace:*",
+    "@dos/contracts": "workspace:*"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@dos/erp-marketing",
+  "version": "1.0.0",
+  "description": "DOS-AIO ERP Microservice: Marketing Module (Campaigns, Content, Outreach)",
+  "main": "index.ts",
+  "private": true,
+  "dependencies": {
+    "@dos/types": "workspace:*",
+    "@dos/contracts": "workspace:*"
+  }
+}

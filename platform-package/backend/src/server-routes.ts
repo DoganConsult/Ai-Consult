@@ -34,7 +34,11 @@ import subscriptionLifecycleRoutes from './platform/dos/lifecycle/routes/subscri
 
 // ── DOS: Admin ────────────────────────────────────────────────────────────────
 import platformAdminRoutes from './platform/dos/admin/platform-admin.routes';
-import openclawRoutes from './modules/platform/routes/integration/openclaw.routes';
+import openclawRoutes from './platform/openclaw/openclaw.routes';
+import doganConsultRoutes from './products/dogan-consult/dogan-consult.routes';
+import { sbgRoutes } from './products/sbg/sbg.routes';
+import { erpRoutes } from './products/erp/erp.routes';
+import { portalRoutes } from './products/erp/portals.routes';
 
 // ── DOS: Observability & health ───────────────────────────────────────────────
 import healthRoutes from './platform/dos/http/health/health.routes';
@@ -125,6 +129,11 @@ export function mountRoutes(app: express.Express): void {
 
   // Expose OpenClaw public AI agent routes before auth guards
   app.use('/api/integration/openclaw', openclawRoutes);
+  
+  app.use('/api/products/dogan-consult', doganConsultRoutes);
+  app.use('/api/products/sbg', sbgRoutes);
+  app.use('/api/products/erp', erpRoutes);
+  app.use('/api/products/erp/portals', portalRoutes);
 
   app.use('/api', tenantGuard);
   app.use('/api', subscriptionStatusGuard());

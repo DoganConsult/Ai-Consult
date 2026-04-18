@@ -110,7 +110,8 @@ export function callGemini(
           try {
             const parsed = JSON.parse(data);
             if (parsed.error) {
-              reject(new Error(`[gemini] ${toErrorMessage(parsed.error) || JSON.stringify(parsed.error)}`));
+              console.error('DEBUG GEMINI RAW ERROR:', data);
+              reject(new Error(`[gemini] ERROR FROM API: ${data}`));
               return;
             }
             const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';

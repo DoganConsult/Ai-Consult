@@ -11,3 +11,5 @@ pm2.log
 trace.log
 out*.log
 crash*.log
+.env.local
+.env.*.local

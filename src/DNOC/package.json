@@ -1,0 +1,24 @@
+{
+  "name": "@dogan/dnoc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@dogan/config": "workspace:*",
+    "@dogan/contracts": "workspace:*",
+    "@dogan/db": "workspace:*",
+    "@dogan/telemetry": "workspace:*",
+    "fastify": "5.2.0",
+    "fastify-plugin": "5.0.1",
+    "kysely": "0.27.5"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  }
+}

@@ -3,29 +3,21 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { apiLimiter } from './middleware/rateLimiter.js';
+import { requireBearer } from './middleware/requireBearer.js';
 import { runMigrations } from './db/migrate.js';
-import { runSbgMigrations } from './db/migrate-sbg.js';
 import { connectRedis } from './db/redis.js';
 import { getGraphClient } from './services/graph.js';
-import { startInboxPoller } from './services/inboxPoller.js';
 import healthRouter from './routes/health.js';
-import consultationsRouter from './routes/consultations.js';
-import contactsRouter from './routes/contacts.js';
 import graphRouter from './routes/graph.js';
 import mailboxRouter from './routes/mailbox.js';
-import agentRouter from './routes/agent.js';
 import chatRouter from './routes/chat.js';
 import labProductsRouter from './routes/lab/products.js';
-import sbgEntitiesRouter from './routes/sbg/entities.js';
-import sbgAuthRouter, { verifyToken } from './routes/sbg/auth.js';
-import sbgIntegrationsRouter from './routes/sbg/integrations.js';
-import sbgAgentsRouter from './routes/sbg/agents.js';
-import sbgFunctionsRouter from './routes/sbg/functions.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(helmet());
+app.disable('x-powered-by');
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({
   origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:8001'],
   methods: ['GET', 'POST', 'PATCH', 'DELETE'],
@@ -37,29 +29,27 @@ app.use('/api', apiLimiter);
 app.use('/uploads', express.static('uploads'));
 
 app.use('/api/health', healthRouter);
-app.use('/api/consultations', consultationsRouter);
-app.use('/api/contacts', contactsRouter);
-app.use('/api/graph', graphRouter);
-app.use('/api/mailbox', mailboxRouter);
-app.use('/api/agent', agentRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/lab/products', labProductsRouter);
 
-app.use('/api/sbg', verifyToken);
-app.use('/api/sbg/entities', sbgEntitiesRouter);
-app.use('/api/sbg/auth', sbgAuthRouter);
-app.use('/api/sbg/integrations', sbgIntegrationsRouter);
-app.use('/api/sbg/agents', sbgAgentsRouter);
-app.use('/api/sbg/functions', sbgFunctionsRouter);
+app.use('/api/graph', requireBearer, graphRouter);
+app.use('/api/mailbox', requireBearer, mailboxRouter);
+
+app.use((req, res) => res.status(404).json({ error: 'not found', path: req.originalUrl }));
+
+app.use((err, _req, res, _next) => {
+  console.error('Unhandled error:', err);
+  res.status(err.status || 500).json({ error: err.message || 'internal error' });
+});
 
 async function start() {
   await connectRedis();
   await runMigrations();
-  await runSbgMigrations();
-  getGraphClient();
-  startInboxPoller();
-  app.listen(PORT, () => {
-    console.log(`Backend running on port ${PORT}`);
+  if (process.env.AZURE_TENANT_ID && process.env.AZURE_CLIENT_ID && process.env.AZURE_CLIENT_SECRET) {
+    try { getGraphClient(); } catch (e) { console.warn('Graph client init skipped:', e.message); }
+  }
+  app.listen(PORT, '127.0.0.1', () => {
+    console.log(`Backend running on 127.0.0.1:${PORT}`);
   });
 }
 

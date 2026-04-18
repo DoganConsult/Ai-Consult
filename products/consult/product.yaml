@@ -1,0 +1,13 @@
+id: consult
+name: Dogan Consult
+version: 0.1.0
+routePrefix: /p/consult
+schema: product_consult
+kernel:
+  requires: ">=0.1.0 <1.0.0"
+caps:
+  - db
+  - authz
+  - audit
+modules:
+  - consult.notes

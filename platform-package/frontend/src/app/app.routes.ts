@@ -64,6 +64,33 @@ export const routes: Routes = [
         path: 'diagnostics',
         loadComponent: () => import('./pages/diagnostics/support-diagnostics.component').then(m => m.SupportDiagnosticsComponent),
       },
+      {
+        path: 'erp',
+        loadComponent: () => import('./pages/erp/erp-shell.component').then(m => m.ErpShellComponent),
+        children: [
+          {
+            path: 'sales',
+            loadComponent: () => import('./pages/erp/sales/sales-pipeline.component').then(m => m.SalesPipelineComponent),
+          },
+          {
+            path: 'finance',
+            loadComponent: () => import('./pages/erp/finance/finance-dashboard.component').then(m => m.FinanceDashboardComponent),
+          },
+          {
+            path: 'hr',
+            loadComponent: () => import('./pages/erp/hr/hr-dashboard.component').then(m => m.HrDashboardComponent),
+          },
+          {
+            path: 'marketing',
+            loadComponent: () => import('./pages/erp/marketing/marketing-dashboard.component').then(m => m.MarketingDashboardComponent),
+          },
+          {
+            path: 'procurement',
+            loadComponent: () => import('./pages/erp/procurement/procurement-dashboard.component').then(m => m.ProcurementDashboardComponent),
+          },
+          { path: '', redirectTo: 'sales', pathMatch: 'full' }
+        ]
+      },
       { path: 'dashboard', redirectTo: 'overview', pathMatch: 'full' },
       { path: 'health', redirectTo: 'diagnostics', pathMatch: 'full' },
       { path: 'users', redirectTo: 'identity', pathMatch: 'full' },

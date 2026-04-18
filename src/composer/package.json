@@ -1,0 +1,23 @@
+{
+  "name": "@dogan/composer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node --enable-source-maps dist/index.js"
+  },
+  "dependencies": {
+    "@dogan/config": "workspace:*",
+    "@dogan/dauth": "workspace:*",
+    "@dogan/dnoc": "workspace:*",
+    "@dogan/dos": "workspace:*",
+    "@dogan/dsoc": "workspace:*",
+    "@dogan/telemetry": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  }
+}

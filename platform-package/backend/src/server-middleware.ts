@@ -35,7 +35,7 @@ export function configureMiddleware(app: express.Express): void {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", ((_req: any, res: any) => `'nonce-${res.locals.cspNonce}'`) as any],
         scriptSrcAttr: [((_req: any, res: any) => `'nonce-${res.locals.cspNonce}'`) as any],
-        styleSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
         fontSrc: ["'self'", "data:"],
         imgSrc: ["'self'", "data:", "https:"],
         connectSrc: ["'self'"],

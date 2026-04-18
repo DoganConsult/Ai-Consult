@@ -1,0 +1,27 @@
+{
+  "name": "dogan-ai-os",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dogan AI OS — multi-tenant on-prem platform",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r --filter \"./packages/**\" --filter \"./services/**\" --filter \"./products/**\" --filter \"./src/**\" run build",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "quality": "node tools/quality/check.mjs",
+    "verify": "pnpm run quality && pnpm -r run typecheck && pnpm -r run build && pnpm -r run test",
+    "migrate:platform": "node --enable-source-maps packages/db/dist/migrate-cli.js platform",
+    "migrate:consult": "node --enable-source-maps packages/db/dist/migrate-cli.js product_consult",
+    "kernel:dev": "pnpm --filter @dogan/kernel-api run dev",
+    "kernel:start": "pnpm --filter @dogan/kernel-api run start"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3",
+    "tsx": "4.19.2",
+    "@types/node": "22.10.2",
+    "vitest": "2.1.8"
+  }
+}

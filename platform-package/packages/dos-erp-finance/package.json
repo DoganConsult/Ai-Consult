@@ -1,0 +1,11 @@
+{
+  "name": "@dos/erp-finance",
+  "version": "1.0.0",
+  "description": "DOS-AIO ERP Microservice: Finance Module (Invoicing, Collections, Payments)",
+  "main": "index.ts",
+  "private": true,
+  "dependencies": {
+    "@dos/types": "workspace:*",
+    "@dos/contracts": "workspace:*"
+  }
+}

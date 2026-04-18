@@ -110,7 +110,7 @@ export async function chatCompletion(
 ): Promise<LLMCompletionResult> {
   const config = loadConfig();
   if (!config.enabled) {
-    return { content: "LLM is disabled in configuration.", provider: "none", model: "none", latencyMs: 0 };
+    throw new Error("LLM is disabled in configuration.");
   }
 
   if (routerOverrides?.maxTokens) config.maxTokens = routerOverrides.maxTokens;
@@ -141,14 +141,13 @@ export async function chatCompletion(
       try {
         const result = await callFree(provider as FreeProvider, fp, messages, config.maxTokens);
         return { ...result, latencyMs: Date.now() - start };
-      } catch (err: unknown) {
+      } catch (err) {
+        console.error('DEBUG LLM gemini throw:', err);
         logger.warn(`[LLM] ${provider} failed (agent ${agentId || "?"}): ${toErrorMessage(err)}`);
+        throw err;
       }
     }
-    return {
-      content: `Free provider '${provider}' is not configured or not enabled.`,
-      provider: "none", model: "none", latencyMs: Date.now() - start,
-    };
+    throw new Error(`Free provider '${provider}' is not configured or not enabled.`);
   }
 
   // --- "free-first" mode: Free → Claude → Azure → Ollama ---
@@ -191,10 +190,7 @@ export async function chatCompletion(
         logger.warn(`[LLM] Ollama failed (agent ${agentId || "?"}): ${toErrorMessage(err)}`);
       }
     }
-    return {
-      content: "No LLM provider available. Configure free/premium providers or Ollama.",
-      provider: "none", model: "none", latencyMs: Date.now() - start,
-    };
+    throw new Error("No LLM provider available in free-first fallback chain. All attempts failed.");
   }
 
   // --- Default "auto" / "claude" / "azure-openai" mode: Claude → Azure → Free → Ollama ---
@@ -254,12 +250,7 @@ export async function chatCompletion(
     }
   }
 
-  return {
-    content: "No LLM provider is available. Check Claude, Azure OpenAI, free providers, and Ollama configuration.",
-    provider: "none",
-    model: "none",
-    latencyMs: Date.now() - start,
-  };
+  throw new Error("No LLM provider is available or all fallbacks failed. Check Claude, Azure OpenAI, free providers, and Ollama configuration.");
 }
 
 /**
@@ -277,7 +268,7 @@ export async function enhancedChatCompletion(
       const { checkBudgetAllowance } = await import('./llm-usage-tracker.service');
       const budget = await checkBudgetAllowance(tenantId);
       if (!budget.allowed) {
-        return { content: budget.reason || 'Budget exceeded', provider: 'none', model: 'none', latencyMs: 0 };
+        throw new Error(budget.reason || 'Budget exceeded');
       }
     } catch { /* non-fatal */ }
   }
@@ -378,7 +369,7 @@ export async function agentChat(
         };
       }
       if (agentResolution.resolution_status === 'blocked_enforce') {
-        return { content: 'Agent governance check failed: ' + (agentResolution.warnings[0] || 'blocked'), provider: 'governance', model: 'none', latencyMs: 0 };
+        throw new Error('Agent governance check failed: ' + (agentResolution.warnings[0] || 'blocked'));
       }
     } catch {
       systemPrompt = '';
@@ -412,7 +403,7 @@ export async function agentChat(
       const { guardInput } = await import('./prompt-injection-guard.service');
       const guard = await guardInput(opts.tenantId, userMessage, opts.userId, agentId);
       if (!guard.allowed) {
-        return { content: `Input blocked: ${guard.warning}`, provider: 'guard', model: 'none', latencyMs: 0 };
+        throw new Error(`Input blocked: ${guard.warning}`);
       }
       userMessage = guard.sanitizedInput;
     } catch { /* non-fatal */ }

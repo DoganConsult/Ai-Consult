@@ -21,6 +21,13 @@
     "migrate": "ts-node src/migrations/runner.ts"
   },
   "dependencies": {
+    "@dos/types": "workspace:*",
+    "@dos/contracts": "workspace:*",
+    "@dos/erp-sales": "workspace:*",
+    "@dos/erp-finance": "workspace:*",
+    "@dos/erp-hr": "workspace:*",
+    "@dos/erp-marketing": "workspace:*",
+    "@dos/erp-procurement": "workspace:*",
     "@anthropic-ai/sdk": "^0.82.0",
     "@azure/identity": "^4.13.1",
     "@azure/keyvault-secrets": "^4.10.0",
