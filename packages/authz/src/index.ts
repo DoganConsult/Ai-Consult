@@ -164,3 +164,7 @@ export { OpenFgaAdmin } from './openfga-admin.js';
 export type { OpenFgaAdminOptions, FgaTuple } from './openfga-admin.js';
 export { RiskEngine } from './risk.js';
 export type { AuthSignal, RiskBand, RiskDecision } from './risk.js';
+export { AbacEvaluator } from './abac.js';
+export type { AbacContext, AbacPolicy, AbacDecision } from './abac.js';
+export { SodEvaluator } from './sod.js';
+export type { SodRule, SodViolation, SodCheckInput } from './sod.js';

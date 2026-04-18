@@ -14,6 +14,93 @@ export interface Database {
   'platform.auth_events': PlatformAuthEventsTable;
   'platform.dauth_risk_scores': PlatformDauthRiskScoresTable;
   'platform.role_assignments': PlatformRoleAssignmentsTable;
+  'platform.event_outbox': PlatformEventOutboxTable;
+  'platform.sessions': PlatformSessionsTable;
+  'platform.abac_policies': PlatformAbacPoliciesTable;
+  'platform.sod_rules': PlatformSodRulesTable;
+  'platform.sod_violations': PlatformSodViolationsTable;
+  'platform.tenant_tier_limits': PlatformTenantTierLimitsTable;
+}
+
+export interface PlatformEventOutboxTable {
+  id: Generated<string>;
+  occurred_at: Timestamp;
+  tenant_id: string;
+  subject: string;
+  event_type: string;
+  payload: unknown;
+  headers: unknown;
+  dedup_key: string | null;
+  status: 'pending' | 'published' | 'dead';
+  attempts: number;
+  last_error: string | null;
+  published_at: Timestamp | null;
+  locked_until: Timestamp | null;
+}
+
+export interface PlatformSessionsTable {
+  id: Generated<string>;
+  tenant_id: string;
+  user_id: string;
+  kc_session_id: string | null;
+  created_at: Timestamp;
+  last_seen_at: Timestamp;
+  expires_at: Timestamp;
+  revoked_at: Timestamp | null;
+  client_ip: string | null;
+  user_agent: string | null;
+  amr: string[];
+  risk_band: 'low' | 'medium' | 'high' | 'critical' | null;
+}
+
+export interface PlatformAbacPoliciesTable {
+  id: Generated<string>;
+  tenant_id: string;
+  code: string;
+  name: string;
+  effect: 'permit' | 'deny';
+  resource: string;
+  action: string;
+  expression: string;
+  enabled: boolean;
+  priority: number;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface PlatformSodRulesTable {
+  id: Generated<string>;
+  tenant_id: string;
+  code: string;
+  name: string;
+  kind: 'static' | 'dynamic';
+  conflict_set: string[];
+  mitigation: string | null;
+  enforce: 'block' | 'warn';
+  enabled: boolean;
+  created_at: Timestamp;
+}
+
+export interface PlatformSodViolationsTable {
+  id: Generated<number>;
+  ts: Timestamp;
+  tenant_id: string;
+  user_id: string;
+  rule_id: string;
+  context: 'grant' | 'runtime';
+  subject: string | null;
+  action: string | null;
+  decision: 'blocked' | 'warned' | 'mitigated';
+  detail: unknown;
+}
+
+export interface PlatformTenantTierLimitsTable {
+  tier: 'starter' | 'growth' | 'enterprise' | 'sovereign';
+  max_users: number;
+  max_api_keys: number;
+  max_sessions: number;
+  allow_dedicated: boolean;
+  features: unknown;
 }
 
 type Timestamp = ColumnType<Date, Date | string | undefined, Date | string>;

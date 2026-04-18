@@ -33,6 +33,14 @@ export const KernelConfigSchema = Type.Object({
   JWT_DEV_SECRET: Type.Optional(Type.String()),
   PRODUCTS_DIR: Type.String({ default: 'products' }),
   KERNEL_VERSION: Type.String({ default: '0.1.0' }),
+  NATS_URL: Type.String({ default: 'nats://127.0.0.1:4222' }),
+  NATS_USER: Type.Optional(Type.String()),
+  NATS_PASS: Type.Optional(Type.String()),
+  KEYCLOAK_BASE_URL: Type.String({ default: 'http://127.0.0.1:8090' }),
+  KEYCLOAK_REALM: Type.String({ default: 'dogan' }),
+  KEYCLOAK_ADMIN_USER: Type.Optional(Type.String()),
+  KEYCLOAK_ADMIN_PASSWORD: Type.Optional(Type.String()),
+  KEYCLOAK_EVENTS_HMAC_SECRET: Type.Optional(Type.String()),
 });
 
 export type KernelConfig = Static<typeof KernelConfigSchema>;

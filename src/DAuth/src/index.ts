@@ -6,11 +6,19 @@ import { Type } from '@sinclair/typebox';
 import {
   JwtVerifier,
   OpenFgaClient,
+  OpenFgaAdmin,
+  KeycloakAdmin,
   RiskEngine,
   type AuthSignal,
   type RiskDecision,
   type VerifiedClaims,
 } from '@dogan/authz';
+import { NatsRuntime, Outbox, DOGAN_EVENTS_STREAM, DOGAN_EVENTS_SUBJECT, consumerName } from '@dogan/events';
+import { provisioningRoutes } from './provisioning.js';
+import { sessionRoutes } from './sessions.js';
+import { apiKeyRoutes } from './api-keys.js';
+import { abacRoutes } from './abac-routes.js';
+import { kcEventRoutes } from './kc-events.js';
 import { ForbiddenError, UnauthorizedError } from '@dogan/contracts';
 import type { KernelConfig } from '@dogan/config';
 import type { Logger } from '@dogan/telemetry';
@@ -128,6 +136,41 @@ const dauthPlugin: FastifyPluginAsync<DAuthPillarOptions> = async (app, opts) =>
 
   const api: DAuthApi = { jwt, fga, risk, requireRelation, recordEvent };
   app.decorate('dauth', api);
+
+  // ---------- Event bus wiring ----------
+  const nats = new NatsRuntime({
+    servers: [opts.config.NATS_URL],
+    user: opts.config.NATS_USER,
+    pass: opts.config.NATS_PASS,
+    name: 'dogan-dauth',
+    logger: opts.logger,
+  });
+  await nats.ensureStream(DOGAN_EVENTS_STREAM, [DOGAN_EVENTS_SUBJECT]);
+  await nats.ensureConsumer(DOGAN_EVENTS_STREAM, { durable_name: consumerName('dauth', 'relay') });
+  const outbox = new Outbox(app.kernel.db, nats, opts.logger);
+  const stopRelay = outbox.startRelay({ batchSize: 100, pollIntervalMs: 1_000, maxAttempts: 10 });
+  app.addHook('onClose', async () => { await stopRelay(); await nats.close(); });
+
+  // ---------- Admin clients for provisioning ----------
+  const fgaAdmin = new OpenFgaAdmin({ apiUrl: opts.config.OPENFGA_URL });
+  const keycloak = opts.config.KEYCLOAK_ADMIN_USER && opts.config.KEYCLOAK_ADMIN_PASSWORD
+    ? new KeycloakAdmin({
+        baseUrl: opts.config.KEYCLOAK_BASE_URL,
+        adminUser: opts.config.KEYCLOAK_ADMIN_USER,
+        adminPassword: opts.config.KEYCLOAK_ADMIN_PASSWORD,
+      })
+    : undefined;
+
+  // ---------- Sub-route modules ----------
+  await app.register(provisioningRoutes({
+    keycloak, fgaAdmin, storeId: opts.config.OPENFGA_STORE_ID ?? '',
+    modelId: opts.config.OPENFGA_MODEL_ID ?? '',
+    realm: opts.config.KEYCLOAK_REALM, outbox,
+  }));
+  await app.register(sessionRoutes(outbox));
+  await app.register(apiKeyRoutes(outbox));
+  await app.register(abacRoutes);
+  await app.register(kcEventRoutes(outbox, opts.config.KEYCLOAK_EVENTS_HMAC_SECRET));
 
   // ---------- Routes ----------
   app.get('/pillars/dauth/health', async () => ({

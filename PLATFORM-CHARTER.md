@@ -90,6 +90,13 @@ DAuth:
 - [x] OpenFGA store `dogan-ai-os` + authorization model created; `OPENFGA_STORE_ID` + `OPENFGA_MODEL_ID` wired in env.
 - [x] Composer running under pm2 as `dogan-os`; `/platform`, `/kernel/ready`, `/kernel/capabilities`, all four `/pillars/*/health` return 200; unauthenticated `/pillars/dauth/whoami` returns 401.
 - [x] PG14 legacy cluster dropped; PG18 master is the only PostgreSQL on the host (5432).
+- [x] Migrations `0003_dauth_events_sessions.sql` (tier model, transactional outbox, sessions, api_keys v2), `0004_dauth_org.sql` (org_units/ltree, locations, positions, user_positions, user_attributes), `0005_dauth_abac_sod.sql` (abac_policies, sod_rules, sod_violations, static-grant trigger) applied. All tables FORCE RLS, tenant-scoped.
+- [x] NATS JetStream 2.10.22 native + systemd; DOGAN account (JetStream enabled); `DOGAN_EVENTS` stream (`dogan.events.>`) + durable consumer `dogan-dauth-relay` bootstrapped by composer on boot.
+- [x] `@dogan/events`: NatsRuntime (connect/stream/consumer/publish/subscribe) + Outbox relay (SKIP LOCKED, dedup via NATS msgId) + subject taxonomy `dogan.events.<tenantId>.<domain>.<eventType>`.
+- [x] `@dogan/authz`: AbacEvaluator (whitelisted CEL subset via jsep, no function calls, no cross-root access) + SodEvaluator (static grant + dynamic runtime); 10 tests passing.
+- [x] DAuth sub-routes split to stay under the 500 LOC quality cap: `provisioning.ts` (tenants/users/roles-grant/revoke), `sessions.ts`, `api-keys.ts` (mints `dga_` tokens, sha256 hash, ip_allowlist), `abac-routes.ts` (policies + check + sod rules + preflight), `kc-events.ts` (HMAC-verified Keycloak webhook bridge → auth_events + outbox).
+- [x] Transactional outbox wired: every provisioning/session/api-key/abac route enqueues events inside the same tenant transaction; `Outbox.startRelay` ships to NATS with exponential retry + dead-letter after max attempts.
+- [x] Quality scan green (no file >500 LOC, no forbidden tokens). Builds green for `@dogan/{events,authz,db,config,dauth,kernel,composer}`.
 
 DSOC:
 - [x] Audit hook on every mutating verb with tenant + user + reqId.
