@@ -33,6 +33,10 @@ export const KernelConfigSchema = Type.Object({
   JWT_DEV_SECRET: Type.Optional(Type.String()),
   PRODUCTS_DIR: Type.String({ default: 'products' }),
   KERNEL_VERSION: Type.String({ default: '0.1.0' }),
+  KERNEL_ALLOWLIST: Type.Union(
+    [Type.Literal('strict'), Type.Literal('permissive')],
+    { default: 'permissive' },
+  ),
   NATS_URL: Type.String({ default: 'nats://127.0.0.1:4222' }),
   NATS_USER: Type.Optional(Type.String()),
   NATS_PASS: Type.Optional(Type.String()),
