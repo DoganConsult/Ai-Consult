@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { authenticate, requirePermission } from '../dauth';
 import { toErrorMessage } from '../../errors/http-error.util';
 import { pool } from '../../config/db/pool';
+import { hmacGuard, writeAudit } from './audit.util';
 
 const router = Router();
 
@@ -89,6 +90,7 @@ router.get(
 
 router.post(
   '/alerts/webhook',
+  hmacGuard('ALERTMANAGER_WEBHOOK_HMAC_SECRET'),
   async (req: Request, res: Response) => {
     try {
       const body = req.body as { alerts?: Array<Record<string, unknown>> };
@@ -112,6 +114,7 @@ router.post(
           ],
         );
       }
+      await writeAudit(req, 'dnoc.alerts.webhook', 'platform.security_alerts', { received: alerts.length });
       res.json({ received: alerts.length });
     } catch (err) {
       res.status(500).json({ error: toErrorMessage(err) });
@@ -121,6 +124,7 @@ router.post(
 
 router.post(
   '/alerts/pager',
+  hmacGuard('ALERTMANAGER_WEBHOOK_HMAC_SECRET'),
   async (req: Request, res: Response) => {
     try {
       const body = req.body as { alerts?: Array<Record<string, unknown>> };
@@ -144,6 +148,7 @@ router.post(
           ],
         );
       }
+      await writeAudit(req, 'dnoc.alerts.pager', 'platform.security_alerts', { paged: alerts.length });
       res.json({ paged: alerts.length });
     } catch (err) {
       res.status(500).json({ error: toErrorMessage(err) });

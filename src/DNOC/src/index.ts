@@ -79,6 +79,24 @@ const dnocPlugin: FastifyPluginAsync<DNOCPillarOptions> = async (app: FastifyIns
 
   // Alertmanager webhook ingress. No tenant context (infrastructure-level).
   // alertmanager.yml receivers post here for default + pager routes.
+  const webhookSecret = process.env.ALERTMANAGER_WEBHOOK_HMAC_SECRET;
+  const verifyWebhookSig = async (req: FastifyRequest): Promise<string | null> => {
+    if (!webhookSecret) return null;
+    const { createHmac, timingSafeEqual } = await import('node:crypto');
+    const sig = String(req.headers['x-dogan-signature'] ?? '');
+    if (!sig) return 'missing x-dogan-signature';
+    const rawBody = (req as FastifyRequest & { rawBody?: string }).rawBody
+      ?? JSON.stringify(req.body ?? {});
+    const mac = createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
+    try {
+      const a = Buffer.from(sig, 'hex');
+      const b = Buffer.from(mac, 'hex');
+      if (a.length !== b.length || !timingSafeEqual(a, b)) return 'bad signature';
+    } catch {
+      return 'bad signature';
+    }
+    return null;
+  };
   const ingestAlerts = async (req: FastifyRequest, pager: boolean) => {
     const body = (req.body ?? {}) as { alerts?: Array<Record<string, unknown>> };
     const alerts = Array.isArray(body.alerts) ? body.alerts : [];
@@ -104,8 +122,16 @@ const dnocPlugin: FastifyPluginAsync<DNOCPillarOptions> = async (app: FastifyIns
     });
     return { received: alerts.length, pager };
   };
-  app.post('/pillars/dnoc/alerts/webhook', async (req) => ingestAlerts(req, false));
-  app.post('/pillars/dnoc/alerts/pager', async (req) => ingestAlerts(req, true));
+  app.post('/pillars/dnoc/alerts/webhook', async (req, reply) => {
+    const err = await verifyWebhookSig(req);
+    if (err) { reply.code(401); return { error: err }; }
+    return ingestAlerts(req, false);
+  });
+  app.post('/pillars/dnoc/alerts/pager', async (req, reply) => {
+    const err = await verifyWebhookSig(req);
+    if (err) { reply.code(401); return { error: err }; }
+    return ingestAlerts(req, true);
+  });
 
   app.get('/pillars/dnoc/health', async (_req, reply) => {
     const probes = await runProbes();

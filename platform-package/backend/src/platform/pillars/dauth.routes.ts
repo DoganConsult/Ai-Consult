@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { authenticate, requirePermission } from '../dauth';
 import { toErrorMessage } from '../../errors/http-error.util';
 import { pool } from '../../config/db/pool';
+import { writeAudit } from './audit.util';
 
 const router = Router();
 
@@ -49,6 +50,7 @@ router.post(
         return;
       }
       await pool.query(`update public.sessions set expires_at = now() where id = $1`, [req.params.id]);
+      await writeAudit(req, 'dauth.session.revoke', `public.sessions:${req.params.id}`, { id: req.params.id });
       res.json({ ok: true });
     } catch (err) {
       res.status(500).json({ error: toErrorMessage(err) });

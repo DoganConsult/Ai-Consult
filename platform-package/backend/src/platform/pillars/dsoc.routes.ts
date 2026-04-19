@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { authenticate, requirePermission } from '../dauth';
 import { toErrorMessage } from '../../errors/http-error.util';
 import { pool } from '../../config/db/pool';
+import { writeAudit } from './audit.util';
 
 const router = Router();
 
@@ -68,6 +69,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       await mutateAlert(String(req.params.id), 'ack', (req as Request & { user?: { id?: string } }).user?.id);
+      await writeAudit(req, 'dsoc.alert.ack', `platform.security_alerts:${req.params.id}`, { id: req.params.id });
       res.json({ ok: true });
     } catch (err) {
       res.status(500).json({ error: toErrorMessage(err) });
@@ -82,6 +84,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       await mutateAlert(String(req.params.id), 'resolved', (req as Request & { user?: { id?: string } }).user?.id);
+      await writeAudit(req, 'dsoc.alert.resolve', `platform.security_alerts:${req.params.id}`, { id: req.params.id });
       res.json({ ok: true });
     } catch (err) {
       res.status(500).json({ error: toErrorMessage(err) });
@@ -96,6 +99,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       await mutateAlert(String(req.params.id), 'suppressed', (req as Request & { user?: { id?: string } }).user?.id);
+      await writeAudit(req, 'dsoc.alert.suppress', `platform.security_alerts:${req.params.id}`, { id: req.params.id });
       res.json({ ok: true });
     } catch (err) {
       res.status(500).json({ error: toErrorMessage(err) });

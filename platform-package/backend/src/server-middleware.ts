@@ -53,7 +53,12 @@ export function configureMiddleware(app: express.Express): void {
   }));
 
   app.use(cookieParser());
-  app.use(express.json({ limit: '10mb' }));
+  app.use(express.json({
+    limit: '10mb',
+    verify: (req: express.Request & { rawBody?: string }, _res, buf) => {
+      req.rawBody = buf.toString('utf8');
+    },
+  }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
   app.use(inputSanitization());
