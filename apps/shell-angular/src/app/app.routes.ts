@@ -27,6 +27,13 @@ export const routes: Routes = [
       { path: 'dos/feature-flags', loadComponent: () => import('./workspace/pages/feature-flags.page').then((m) => m.FeatureFlagsPage) },
       { path: 'dos/inventory', loadComponent: () => import('./workspace/pages/inventory.page').then((m) => m.InventoryPage) },
       { path: 'dos/capabilities', loadComponent: () => import('./workspace/pages/capabilities.page').then((m) => m.CapabilitiesPage) },
+      { path: 'dos/admin-actions', loadComponent: () => import('./workspace/pages/admin-actions.page').then((m) => m.AdminActionsPage) },
+      { path: 'dos/dynamic-endpoints', loadComponent: () => import('./workspace/pages/dynamic-endpoints.page').then((m) => m.DynamicEndpointsPage) },
+      { path: 'dos/schema-designer', loadComponent: () => import('./workspace/pages/schema-designer.page').then((m) => m.SchemaDesignerPage) },
+      { path: 'dos/plugins', loadComponent: () => import('./workspace/pages/plugins.page').then((m) => m.PluginsPage) },
+      { path: 'dos/ai-agents', loadComponent: () => import('./workspace/pages/ai-agents.page').then((m) => m.AiAgentsPage) },
+      { path: 'dos/cost-quotas', loadComponent: () => import('./workspace/pages/cost-quotas.page').then((m) => m.CostQuotasPage) },
+      { path: 'dos/jit', loadComponent: () => import('./workspace/pages/jit.page').then((m) => m.JitPage) },
 
       { path: 'dsoc', loadComponent: () => import('./workspace/pages/dsoc-dashboard.page').then((m) => m.DsocDashboardPage) },
       { path: 'dsoc/alerts', loadComponent: () => import('./workspace/pages/alerts.page').then((m) => m.AlertsPage) },

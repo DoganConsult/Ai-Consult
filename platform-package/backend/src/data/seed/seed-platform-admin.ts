@@ -67,5 +67,38 @@ export async function seedPlatformAdmin(): Promise<void> {
     ).catch(() => {});
   }
 
-  logger.info(`[SeedPlatformAdmin] Seeded ${profiles.length} access profiles, ${roles.length} functional roles, ${permissions.length} permissions`);
+  // Grant every seeded permission to the `platform_governor` functional role
+  // so platform_super_admin access profiles resolve to the full permission set.
+  await safeQuery(
+    `INSERT INTO role_permissions (functional_role_id, permission_id)
+     SELECT fr.id, p.id
+     FROM functional_roles fr
+     CROSS JOIN permissions p
+     WHERE fr.code = 'platform_governor' AND p.code = ANY($1::text[])
+     ON CONFLICT DO NOTHING`,
+    [permissions.map((p) => p.code)],
+  ).catch(() => {});
+
+  // Attach `platform_super_admin` profile + `platform_governor` role to any
+  // user whose email starts with `platform@` or `admin@` (idempotent bootstrap
+  // so the UI is usable on a fresh install without manual SQL).
+  await safeQuery(
+    `INSERT INTO user_access_profiles (user_id, access_profile_id)
+     SELECT u.id, ap.id
+     FROM users u, access_profiles ap
+     WHERE ap.code = 'platform_super_admin'
+       AND (u.email ILIKE 'platform@%' OR u.email ILIKE 'admin@%' OR u.email ILIKE 'superadmin@%')
+     ON CONFLICT DO NOTHING`,
+  ).catch(() => {});
+
+  await safeQuery(
+    `INSERT INTO user_role_assignments (user_id, functional_role_id)
+     SELECT u.id, fr.id
+     FROM users u, functional_roles fr
+     WHERE fr.code = 'platform_governor'
+       AND (u.email ILIKE 'platform@%' OR u.email ILIKE 'admin@%' OR u.email ILIKE 'superadmin@%')
+     ON CONFLICT DO NOTHING`,
+  ).catch(() => {});
+
+  logger.info(`[SeedPlatformAdmin] Seeded ${profiles.length} access profiles, ${roles.length} functional roles, ${permissions.length} permissions; bootstrapped super-admin bindings`);
 }

@@ -226,4 +226,106 @@ export class AdminApiService {
   retentionSweep() {
     return this.call<{ dropped: number; skipped?: string }>('/pillars/dsoc/retention/sweep', { method: 'POST' });
   }
+
+  // ===== Platform Admin Super-Power Console =====
+  listAdminActions() { return this.call<{ actions: AdminActionRow[] }>('/pillars/dos/admin/actions'); }
+  requestAdminAction(b: AdminActionInput) { return this.call<AdminActionRow>('/pillars/dos/admin/actions', this.json(b)); }
+  approveAdminAction(b: { id: string; reason: string }) { return this.call<AdminActionRow>('/pillars/dos/admin/actions/approve', this.json(b)); }
+  rejectAdminAction(b: { id: string; reason: string }) { return this.call<AdminActionRow>('/pillars/dos/admin/actions/reject', this.json(b)); }
+  verifyAuditChain() { return this.call<{ ok: boolean; brokenAt?: string }>('/pillars/dos/admin/audit/verify'); }
+
+  listDynamicEndpoints() { return this.call<{ endpoints: DynamicEndpointRow[] }>('/pillars/dos/admin/dynamic-endpoints'); }
+  listDynamicHandlers() { return this.call<{ allowlist: string[] }>('/pillars/dos/admin/dynamic-endpoints/handlers'); }
+  createDynamicEndpoint(b: DynamicEndpointSpec) { return this.call<{ id: string }>('/pillars/dos/admin/dynamic-endpoints', this.json(b)); }
+  toggleDynamicEndpoint(b: { id: string; enabled: boolean }) { return this.call<{ ok: boolean }>('/pillars/dos/admin/dynamic-endpoints/toggle', this.json(b)); }
+  deleteDynamicEndpoint(id: string) { return this.call<{ ok: boolean }>(`/pillars/dos/admin/dynamic-endpoints/${id}`, { method: 'DELETE' }); }
+
+  listSchemaChanges() { return this.call<{ changes: SchemaChangeRow[] }>('/pillars/dos/admin/schema-designer'); }
+  submitSchemaChange(b: { schema: string; ddl: string }) { return this.call<{ id: string; sha256: string; ops: unknown[] }>('/pillars/dos/admin/schema-designer/submit', this.json(b)); }
+  shadowApplySchemaChange(id: string) { return this.call<{ ok: boolean; error?: string }>('/pillars/dos/admin/schema-designer/shadow-apply', this.json({ id })); }
+  applySchemaChange(id: string) { return this.call<{ ok: boolean; id: string }>('/pillars/dos/admin/schema-designer/apply', this.json({ id })); }
+
+  listPlugins() { return this.call<{ plugins: PluginRow[]; capabilities: string[] }>('/pillars/dos/admin/plugins'); }
+  submitPlugin(b: PluginSubmit) { return this.call<{ id: string; cosign_verified: boolean; blocking_vulnerabilities: number }>('/pillars/dos/admin/plugins/submit', this.json(b)); }
+  installPlugin(id: string) { return this.call<{ ok: boolean; id: string }>('/pillars/dos/admin/plugins/install', this.json({ id })); }
+  disablePlugin(id: string) { return this.call<{ ok: boolean; id: string }>('/pillars/dos/admin/plugins/disable', this.json({ id })); }
+
+  listAiAgents() { return this.call<{ agents: AiAgentRow[]; tools_allowlist: string[] }>('/pillars/dos/admin/ai-agents'); }
+  createAiAgent(b: AiAgentSpec) { return this.call<{ id: string }>('/pillars/dos/admin/ai-agents', this.json(b)); }
+  publishAiAgent(id: string) { return this.call<{ ok: boolean; id: string }>('/pillars/dos/admin/ai-agents/publish', this.json({ id })); }
+
+  listCostQuotas() { return this.call<{ quotas: CostQuotaRow[] }>('/pillars/dos/admin/cost-quotas'); }
+  upsertCostQuota(b: CostQuotaSpec) { return this.call<{ id: string }>('/pillars/dos/admin/cost-quotas', this.json(b)); }
+
+  listJit() { return this.call<{ grants: JitGrantRow[] }>('/pillars/dos/admin/jit'); }
+  grantJit(b: { user_id: string; role: string; ticket_ref: string; ttl_minutes: number }) { return this.call<{ id: string }>('/pillars/dos/admin/jit/grant', this.json(b)); }
+  revokeJit(b: { id: string; reason: string }) { return this.call<{ ok: boolean }>('/pillars/dos/admin/jit/revoke', this.json(b)); }
+}
+
+export interface AdminActionInput {
+  category: string; action: string; target_type: string; target_id?: string;
+  reason: string; diff?: Record<string, unknown>;
+}
+export interface AdminActionRow {
+  id: string; ts: string; state: string; actor_id: string; approver_id: string | null;
+  category: string; action: string; target_type: string; target_id: string | null;
+  reason: string; diff: unknown; hash: string; prev_hash: string | null; expires_at: string;
+}
+export interface DynamicEndpointSpec {
+  code: string; version?: number; release_channel?: 'stable'|'canary'|'beta'|'pinned';
+  method: 'GET'|'POST'|'PUT'|'PATCH'|'DELETE'; path: string;
+  handler_ref: string; handler_args?: Record<string, unknown>;
+  permission_code: string; tenant_scope: 'platform'|'tenant'|'user';
+  rate_limit_per_min?: number; idempotency_required?: boolean; audit_category?: string;
+  input_schema: Record<string, unknown>; output_schema: Record<string, unknown>;
+}
+export interface DynamicEndpointRow {
+  id: string; tenant_id: string | null; code: string; version: number; release_channel: string;
+  method: string; path: string; handler_ref: string; handler_args: unknown;
+  permission_code: string; tenant_scope: string; rate_limit_per_min: number;
+  idempotency_required: boolean; audit_category: string; enabled: boolean;
+  created_by: string; created_at: string; updated_at: string;
+  input_schema: unknown; output_schema: unknown;
+}
+export interface SchemaChangeRow {
+  id: string; schema_name: string; ddl_sha256: string; parsed_ops: unknown;
+  shadow_ok: boolean; applied: boolean; applied_at: string | null;
+  created_by: string; created_at: string;
+}
+export interface PluginSubmit {
+  code: string; version: string; bundle_sha256: string; cosign_signer: string;
+  cosign_payload: { bundle_sha256: string; signer: string; signature: string; cert?: string };
+  sbom: { format: string; packages: { name: string; version: string; license?: string }[] };
+  vulnerabilities?: { id: string; severity: string; package?: string }[];
+  capabilities: string[]; manifest: Record<string, unknown>;
+}
+export interface PluginRow {
+  id: string; code: string; version: string; bundle_sha256: string; cosign_signer: string;
+  cosign_verified: boolean; capabilities: string[]; vulnerabilities: unknown;
+  manifest: unknown; state: string; installed_at: string | null;
+  disabled_at: string | null; created_at: string;
+}
+export interface AiAgentSpec {
+  code: string; version?: number;
+  graph: { nodes: { id: string; kind: string; ref?: string; args?: Record<string, unknown> }[];
+           edges: { from: string; to: string; cond?: string }[] };
+  tools_allowed: string[]; cost_cap_usd?: number; token_cap?: number;
+}
+export interface AiAgentRow {
+  id: string; tenant_id: string | null; code: string; version: number;
+  tools_allowed: string[]; cost_cap_usd: number | null; token_cap: number | null;
+  eval_score: number | null; published: boolean; published_at: string | null;
+  created_by: string; created_at: string;
+}
+export interface CostQuotaSpec {
+  scope_type: 'tenant'|'agent'; scope_ref: string; period: 'day'|'month';
+  token_cap?: number; usd_cap?: number; enabled?: boolean;
+}
+export interface CostQuotaRow {
+  id: string; tenant_id: string; scope_type: string; scope_ref: string; period: string;
+  token_cap: number | null; usd_cap: number | null; enabled: boolean; updated_at: string;
+}
+export interface JitGrantRow {
+  id: string; user_id: string; role: string; ticket_ref: string; granted_by: string;
+  granted_at: string; expires_at: string; revoked_at: string | null; revoke_reason: string | null;
 }

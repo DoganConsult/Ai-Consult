@@ -8,10 +8,19 @@ import Aura from '@primeng/themes/aura';
 import { routes } from './app.routes';
 import { GlobalErrorHandler } from './core/infrastructure/error/global-error-handler.service';
 import { PlatformAuthService } from './core/dauth/services/platform-auth.service';
+import { PermissionService } from './core/dauth/services/permission.service';
+import { DynamicRoutesService } from './core/dos/services/dynamic-routes.service';
 import { authInterceptor } from './core/dauth/interceptors/auth.interceptor';
+import { forbiddenInterceptor } from './core/dauth/interceptors/forbidden.interceptor';
 
-function initAuth(auth: PlatformAuthService): () => Promise<void> {
-  return () => auth.init();
+function initAuth(auth: PlatformAuthService, perm: PermissionService, dynRoutes: DynamicRoutesService): () => Promise<void> {
+  return async () => {
+    await auth.init();
+    if (auth.isLoggedIn()) {
+      await perm.load();
+      await dynRoutes.load();
+    }
+  };
 }
 
 export const appConfig: ApplicationConfig = {
@@ -19,7 +28,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideAnimationsAsync(),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, forbiddenInterceptor])),
     providePrimeNG({
       theme: {
         preset: Aura,
@@ -32,7 +41,7 @@ export const appConfig: ApplicationConfig = {
     {
       provide: APP_INITIALIZER,
       useFactory: initAuth,
-      deps: [PlatformAuthService],
+      deps: [PlatformAuthService, PermissionService, DynamicRoutesService],
       multi: true,
     },
   ],

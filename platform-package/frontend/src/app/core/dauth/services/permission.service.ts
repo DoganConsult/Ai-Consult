@@ -44,6 +44,12 @@ export class PermissionService {
     }
   }
 
+  /** Force-reload the snapshot (ignores cache). */
+  async refresh(): Promise<void> {
+    this._loaded.set(false);
+    await this.load();
+  }
+
   clear(): void {
     this._snapshot.set(null);
     this._loaded.set(false);

@@ -4,6 +4,7 @@ import type { KernelConfig } from '@dogan/config';
 import type { Logger } from '@dogan/telemetry';
 import { configCenterRoutes } from './config-center.js';
 import { dosStatsRoutes } from './stats.js';
+import { adminSuperRoutes } from './admin/index.js';
 
 export { buildKernel, loadKernelProducts } from '@dogan/kernel';
 
@@ -20,6 +21,7 @@ const dosPlugin: FastifyPluginAsync<DOSPillarOptions> = async (app: FastifyInsta
   }));
   await app.register(configCenterRoutes);
   await app.register(dosStatsRoutes);
+  await app.register(adminSuperRoutes);
   void opts.logger;
 };
 

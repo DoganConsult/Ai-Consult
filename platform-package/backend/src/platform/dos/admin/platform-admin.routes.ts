@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { authenticate } from '../../dauth';
 import { asyncHandler } from '../http/error-handling/async-handler';
 import { safeQuery } from '../../../config/database/database';
+import { requirePermission, assertNoSodViolation, invalidatePermissionCache } from './require-permission.middleware';
+import { auditAdminAction } from './audit-action.middleware';
 
 const router = Router();
 
@@ -33,7 +35,7 @@ router.get('/access-profiles', authenticate, asyncHandler(async (_req: Request, 
   res.json(result.rows);
 }));
 
-router.post('/access-profiles', authenticate, asyncHandler(async (req: Request, res: Response) => {
+router.post('/access-profiles', authenticate, requirePermission('platform.permission.assign'), auditAdminAction('access_profile.create', 'access_profile'), asyncHandler(async (req: Request, res: Response) => {
   const { code, name, description } = req.body;
   if (!code || !name) { res.status(400).json({ error: 'code and name required' }); return; }
   const result = await safeQuery(
@@ -51,7 +53,7 @@ router.get('/functional-roles', authenticate, asyncHandler(async (_req: Request,
   res.json(result.rows);
 }));
 
-router.post('/functional-roles', authenticate, asyncHandler(async (req: Request, res: Response) => {
+router.post('/functional-roles', authenticate, requirePermission('platform.role.assign', 'platform.permission.assign'), auditAdminAction('functional_role.create', 'functional_role'), asyncHandler(async (req: Request, res: Response) => {
   const { code, module_code, name, category } = req.body;
   if (!code || !name) { res.status(400).json({ error: 'code and name required' }); return; }
   const result = await safeQuery(
@@ -66,7 +68,7 @@ router.get('/permissions', authenticate, asyncHandler(async (_req: Request, res:
   res.json(result.rows);
 }));
 
-router.post('/permissions', authenticate, asyncHandler(async (req: Request, res: Response) => {
+router.post('/permissions', authenticate, requirePermission('platform.permission.assign'), auditAdminAction('permission.create', 'permission'), asyncHandler(async (req: Request, res: Response) => {
   const { code, description, module_code, resource, action } = req.body;
   if (!code) { res.status(400).json({ error: 'code required' }); return; }
   const result = await safeQuery(
@@ -87,7 +89,7 @@ router.get('/role-permissions', authenticate, asyncHandler(async (_req: Request,
   res.json(result.rows);
 }));
 
-router.post('/role-permissions', authenticate, asyncHandler(async (req: Request, res: Response) => {
+router.post('/role-permissions', authenticate, requirePermission('platform.permission.assign'), auditAdminAction('role_permission.assign', 'role_permission'), asyncHandler(async (req: Request, res: Response) => {
   const { functional_role_id, permission_id } = req.body;
   if (!functional_role_id || !permission_id) { res.status(400).json({ error: 'functional_role_id and permission_id required' }); return; }
   const result = await safeQuery(
@@ -137,25 +139,33 @@ router.get('/user-access/:userId', authenticate, asyncHandler(async (req: Reques
   res.json({ userId, profiles: profiles.rows, roles: roles.rows, delegations: delegations.rows });
 }));
 
-router.post('/user-access/:userId/profiles', authenticate, asyncHandler(async (req: Request, res: Response) => {
-  const { userId } = req.params;
+router.post('/user-access/:userId/profiles', authenticate, requirePermission('platform.role.assign', 'platform.permission.assign'), auditAdminAction('user.assign_profile', 'user_access_profile'), asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.params.userId as string;
   const { access_profile_id } = req.body;
   if (!access_profile_id) { res.status(400).json({ error: 'access_profile_id required' }); return; }
   await safeQuery(
     `INSERT INTO user_access_profiles (user_id, access_profile_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
     [userId, access_profile_id]
   );
+  invalidatePermissionCache(userId);
   res.status(201).json({ message: 'profile assigned' });
 }));
 
-router.post('/user-access/:userId/roles', authenticate, asyncHandler(async (req: Request, res: Response) => {
-  const { userId } = req.params;
+router.post('/user-access/:userId/roles', authenticate, requirePermission('platform.role.assign'), auditAdminAction('user.assign_role', 'user_role_assignment'), asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.params.userId as string;
   const { functional_role_id, scope, authority_level } = req.body;
   if (!functional_role_id) { res.status(400).json({ error: 'functional_role_id required' }); return; }
+  try {
+    await assertNoSodViolation(userId, functional_role_id);
+  } catch (err: any) {
+    if (err.status === 409) { res.status(409).json(err.payload); return; }
+    throw err;
+  }
   await safeQuery(
     `INSERT INTO user_role_assignments (user_id, functional_role_id, scope, authority_level) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
     [userId, functional_role_id, scope || null, authority_level || null]
   );
+  invalidatePermissionCache(userId);
   res.status(201).json({ message: 'role assigned' });
 }));
 
@@ -164,7 +174,7 @@ router.get('/delegations', authenticate, asyncHandler(async (_req: Request, res:
   res.json(result.rows);
 }));
 
-router.post('/delegations', authenticate, asyncHandler(async (req: Request, res: Response) => {
+router.post('/delegations', authenticate, requirePermission('platform.delegation.create'), auditAdminAction('delegation.create', 'delegation'), asyncHandler(async (req: Request, res: Response) => {
   const { delegator_id, delegate_id, permission_scope, reason, expires_at } = req.body;
   if (!delegator_id || !delegate_id) { res.status(400).json({ error: 'delegator_id and delegate_id required' }); return; }
   const result = await safeQuery(
@@ -180,7 +190,7 @@ router.get('/sod-rules', authenticate, asyncHandler(async (_req: Request, res: R
   res.json(result.rows);
 }));
 
-router.post('/sod-rules', authenticate, asyncHandler(async (req: Request, res: Response) => {
+router.post('/sod-rules', authenticate, requirePermission('platform.sod.manage'), auditAdminAction('sod_rule.create', 'sod_rule'), asyncHandler(async (req: Request, res: Response) => {
   const { rule_code, conflicting_role_a, conflicting_role_b, description, severity } = req.body;
   if (!rule_code) { res.status(400).json({ error: 'rule_code required' }); return; }
   const result = await safeQuery(
@@ -196,7 +206,7 @@ router.get('/products', authenticate, asyncHandler(async (_req: Request, res: Re
   res.json(result.rows);
 }));
 
-router.post('/products/:productCode/enable', authenticate, asyncHandler(async (req: Request, res: Response) => {
+router.post('/products/:productCode/enable', authenticate, requirePermission('platform.product.enable'), auditAdminAction('product.enable', 'product'), asyncHandler(async (req: Request, res: Response) => {
   const { productCode } = req.params;
   await safeQuery(
     `UPDATE product_registry SET status = 'enabled', updated_at = NOW() WHERE code = $1`, [productCode]
@@ -204,7 +214,7 @@ router.post('/products/:productCode/enable', authenticate, asyncHandler(async (r
   res.json({ message: `product ${productCode} enabled` });
 }));
 
-router.post('/products/:productCode/disable', authenticate, asyncHandler(async (req: Request, res: Response) => {
+router.post('/products/:productCode/disable', authenticate, requirePermission('platform.product.disable'), auditAdminAction('product.disable', 'product'), asyncHandler(async (req: Request, res: Response) => {
   const { productCode } = req.params;
   await safeQuery(
     `UPDATE product_registry SET status = 'disabled', updated_at = NOW() WHERE code = $1`, [productCode]
@@ -217,7 +227,7 @@ router.get('/modules', authenticate, asyncHandler(async (_req: Request, res: Res
   res.json(result.rows);
 }));
 
-router.post('/modules/:moduleCode/enable', authenticate, asyncHandler(async (req: Request, res: Response) => {
+router.post('/modules/:moduleCode/enable', authenticate, requirePermission('platform.module.enable'), auditAdminAction('module.enable', 'module'), asyncHandler(async (req: Request, res: Response) => {
   const { moduleCode } = req.params;
   await safeQuery(
     `UPDATE module_registry SET status = 'enabled', updated_at = NOW() WHERE code = $1`, [moduleCode]
@@ -225,7 +235,7 @@ router.post('/modules/:moduleCode/enable', authenticate, asyncHandler(async (req
   res.json({ message: `module ${moduleCode} enabled` });
 }));
 
-router.post('/modules/:moduleCode/disable', authenticate, asyncHandler(async (req: Request, res: Response) => {
+router.post('/modules/:moduleCode/disable', authenticate, requirePermission('platform.module.disable'), auditAdminAction('module.disable', 'module'), asyncHandler(async (req: Request, res: Response) => {
   const { moduleCode } = req.params;
   await safeQuery(
     `UPDATE module_registry SET status = 'disabled', updated_at = NOW() WHERE code = $1`, [moduleCode]
@@ -238,7 +248,7 @@ router.get('/feature-flags', authenticate, asyncHandler(async (_req: Request, re
   res.json(result.rows);
 }));
 
-router.patch('/feature-flags/:flagCode', authenticate, asyncHandler(async (req: Request, res: Response) => {
+router.patch('/feature-flags/:flagCode', authenticate, requirePermission('platform.feature.toggle'), auditAdminAction('feature_flag.update', 'feature_flag'), asyncHandler(async (req: Request, res: Response) => {
   const { flagCode } = req.params;
   const { enabled, owner_layer } = req.body;
   await safeQuery(
@@ -253,7 +263,7 @@ router.get('/platform-config', authenticate, asyncHandler(async (_req: Request, 
   res.json(result.rows);
 }));
 
-router.patch('/platform-config', authenticate, asyncHandler(async (req: Request, res: Response) => {
+router.patch('/platform-config', authenticate, requirePermission('platform.config.write'), auditAdminAction('platform_config.update', 'platform_config'), asyncHandler(async (req: Request, res: Response) => {
   const { config_key, config_value } = req.body;
   if (!config_key) { res.status(400).json({ error: 'config_key required' }); return; }
   await safeQuery(

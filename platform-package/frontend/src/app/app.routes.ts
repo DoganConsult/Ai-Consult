@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/dauth/guards/auth.guard';
+import { requirePermission } from './core/dauth/guards/require-permission.guard';
 
 export const routes: Routes = [
   {
@@ -30,18 +31,26 @@ export const routes: Routes = [
       },
       {
         path: 'tenants',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.tenant.create', 'platform.tenant.suspend', 'platform.workspace.create'] },
         loadComponent: () => import('./pages/tenants/tenant-management.component').then(m => m.TenantManagementComponent),
       },
       {
         path: 'identity',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.user.invite', 'platform.role.assign', 'platform.permission.assign'] },
         loadComponent: () => import('./pages/identity/identity-access.component').then(m => m.IdentityAccessComponent),
       },
       {
         path: 'modules',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.module.enable', 'platform.module.disable'] },
         loadComponent: () => import('./pages/modules/module-registry.component').then(m => m.ModuleRegistryComponent),
       },
       {
         path: 'settings',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.config.write'] },
         loadComponent: () => import('./pages/settings/platform-settings.component').then(m => m.PlatformSettingsComponent),
       },
       {
@@ -50,6 +59,8 @@ export const routes: Routes = [
       },
       {
         path: 'audit',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.audit.read'] },
         loadComponent: () => import('./pages/audit/audit-events.component').then(m => m.AuditEventsComponent),
       },
       {
@@ -58,11 +69,110 @@ export const routes: Routes = [
       },
       {
         path: 'ai-governance',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.ai.govern'] },
         loadComponent: () => import('./pages/ai-governance/ai-governance.component').then(m => m.AiGovernanceComponent),
       },
       {
         path: 'diagnostics',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.observability.read'] },
         loadComponent: () => import('./pages/diagnostics/support-diagnostics.component').then(m => m.SupportDiagnosticsComponent),
+      },
+      {
+        path: 'products',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.product.enable', 'platform.product.disable'] },
+        loadComponent: () => import('./pages/products/products.component').then(m => m.ProductsComponent),
+      },
+      {
+        path: 'feature-flags',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.feature.toggle'] },
+        loadComponent: () => import('./pages/feature-flags/feature-flags.component').then(m => m.FeatureFlagsComponent),
+      },
+      {
+        path: 'sod',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.sod.manage'] },
+        loadComponent: () => import('./pages/sod/sod-rules.component').then(m => m.SodRulesComponent),
+      },
+      {
+        path: 'delegations',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.delegation.create'] },
+        loadComponent: () => import('./pages/delegations/delegations.component').then(m => m.DelegationsComponent),
+      },
+      {
+        path: 'governance',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.config.read', 'platform.permission.assign'] },
+        loadComponent: () => import('./pages/governance/governance-matrix.component').then(m => m.GovernanceMatrixComponent),
+      },
+      {
+        path: 'activations',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.tenant.create', 'platform.product.enable'] },
+        loadComponent: () => import('./pages/activations/tenant-activations.component').then(m => m.TenantActivationsComponent),
+      },
+      {
+        path: 'config-center',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.config.read', 'platform.config.write'] },
+        loadComponent: () => import('./pages/config-center/config-center.component').then(m => m.ConfigCenterComponent),
+      },
+      {
+        path: 'ai-registries',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.ai.govern'] },
+        loadComponent: () => import('./pages/ai-registries/ai-registries.component').then(m => m.AiRegistriesComponent),
+      },
+      {
+        path: 'p/:code',
+        canActivate: [authGuard],
+        loadComponent: () => import('./pages/_dynamic/dynamic-page.component').then(m => m.DynamicPageComponent),
+      },
+      {
+        path: 'page-catalog',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.config.write', 'platform.schema.manage'] },
+        loadComponent: () => import('./pages/page-catalog/page-catalog.component').then(m => m.PageCatalogComponent),
+      },
+      {
+        path: 'api-builder',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.config.write', 'platform.schema.manage'] },
+        loadComponent: () => import('./pages/api-builder/api-builder.component').then(m => m.ApiBuilderComponent),
+      },
+      {
+        path: 'module-builder',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.config.write', 'platform.schema.manage'] },
+        loadComponent: () => import('./pages/module-builder/module-builder.component').then(m => m.ModuleBuilderComponent),
+      },
+      {
+        path: 'schema-designer',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.schema.manage'] },
+        loadComponent: () => import('./pages/schema-designer/schema-designer.component').then(m => m.SchemaDesignerComponent),
+      },
+      {
+        path: 'ai-graphs',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.ai.govern'] },
+        loadComponent: () => import('./pages/ai-graphs/ai-graphs.component').then(m => m.AiGraphsComponent),
+      },
+      {
+        path: 'plugins',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.schema.manage'] },
+        loadComponent: () => import('./pages/plugins/plugins.component').then(m => m.PluginsComponent),
+      },
+      {
+        path: 'approvals',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.audit.read', 'platform.permission.assign'] },
+        loadComponent: () => import('./pages/approvals/approvals.component').then(m => m.ApprovalsComponent),
       },
       {
         path: 'erp',

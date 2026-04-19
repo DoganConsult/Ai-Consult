@@ -12,6 +12,7 @@
   "dependencies": {
     "@dogan/config": "workspace:*",
     "@dogan/contracts": "workspace:*",
+    "@dogan/db": "workspace:*",
     "@dogan/kernel": "workspace:*",
     "@dogan/telemetry": "workspace:*",
     "@sinclair/typebox": "0.33.22",

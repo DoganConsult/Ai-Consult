@@ -30,6 +30,13 @@ import { workspaceStyles } from './workspace.styles';
         <a routerLink="/workspace/dos/feature-flags" routerLinkActive="active">Feature flags</a>
         <a routerLink="/workspace/dos/inventory" routerLinkActive="active">Inventory</a>
         <a routerLink="/workspace/dos/capabilities" routerLinkActive="active">Kernel capabilities</a>
+        <a routerLink="/workspace/dos/admin-actions" routerLinkActive="active">Admin actions (4-eyes)</a>
+        <a routerLink="/workspace/dos/dynamic-endpoints" routerLinkActive="active">Dynamic endpoints</a>
+        <a routerLink="/workspace/dos/schema-designer" routerLinkActive="active">Schema designer</a>
+        <a routerLink="/workspace/dos/plugins" routerLinkActive="active">Plugin marketplace</a>
+        <a routerLink="/workspace/dos/ai-agents" routerLinkActive="active">AI agent registry</a>
+        <a routerLink="/workspace/dos/cost-quotas" routerLinkActive="active">Cost quotas</a>
+        <a routerLink="/workspace/dos/jit" routerLinkActive="active">JIT elevation</a>
         <div class="pillar-label">DSOC · Security</div>
         <a routerLink="/workspace/dsoc" routerLinkActive="active" [routerLinkActiveOptions]="exact">Dashboard</a>
         <a routerLink="/workspace/dsoc/alerts" routerLinkActive="active">Security alerts</a>

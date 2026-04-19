@@ -464,6 +464,9 @@ importers:
       '@dogan/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@dogan/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@dogan/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
