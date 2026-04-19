@@ -6,6 +6,7 @@ import { safeQuery } from '../../../../config/database/database';
 import { requirePermission } from '../require-permission.middleware';
 import { auditAdminAction } from '../audit-action.middleware';
 import { logger } from '../../observability/logger.service';
+import { buildDdl } from './lowcode.helpers';
 
 const router: Router = Router();
 
@@ -38,73 +39,9 @@ router.get('/tables/:schema/:table/columns', authenticate, requirePermission('pl
 }));
 
 // ──────────────────────────────────────────────────────────────────────────
-// Additive-only DDL generator / executor. Supports:
-//   - add_column
-//   - create_table (with columns)
-//   - create_index
-// Every execution is logged in schema_changes with sha256 of the DDL.
+// Additive-only DDL generator / executor. Every execution is logged in
+// schema_changes with sha256 of the DDL. See lowcode.helpers.ts for buildDdl.
 // ──────────────────────────────────────────────────────────────────────────
-const IDENT = /^[A-Za-z_][A-Za-z0-9_]{0,62}$/;
-const ALLOWED_TYPES = new Set([
-  'text', 'varchar', 'integer', 'bigint', 'smallint', 'numeric', 'boolean',
-  'timestamptz', 'timestamp', 'date', 'uuid', 'jsonb', 'json', 'bytea', 'serial', 'bigserial',
-]);
-
-function ident(s: string): string {
-  if (!IDENT.test(s)) throw new Error(`invalid identifier: ${s}`);
-  return s;
-}
-function dataType(s: string): string {
-  const t = s.toLowerCase();
-  if (!ALLOWED_TYPES.has(t)) throw new Error(`disallowed type: ${s}`);
-  return t;
-}
-
-function buildDdl(change: any): { ddl: string; targetSchema: string; targetTable: string; changeType: string } {
-  const type = String(change?.type || '');
-  const schema = ident(change?.schema || 'public');
-  const table = ident(change?.table || '');
-  switch (type) {
-    case 'add_column': {
-      const col = ident(change?.column);
-      const dtype = dataType(change?.data_type);
-      const nullable = change?.nullable === false ? 'NOT NULL' : '';
-      const def = change?.default ? `DEFAULT ${String(change.default).replace(/[;]/g, '')}` : '';
-      return {
-        ddl: `ALTER TABLE ${schema}.${table} ADD COLUMN IF NOT EXISTS ${col} ${dtype} ${def} ${nullable}`.trim(),
-        targetSchema: schema, targetTable: table, changeType: type,
-      };
-    }
-    case 'create_table': {
-      const columns = Array.isArray(change?.columns) ? change.columns : [];
-      if (columns.length === 0) throw new Error('no_columns');
-      const parts = columns.map((c: any) => {
-        const name = ident(c?.name);
-        const dtype = dataType(c?.data_type);
-        const nullable = c?.nullable === false ? 'NOT NULL' : '';
-        const pk = c?.primary_key ? 'PRIMARY KEY' : '';
-        const def = c?.default ? `DEFAULT ${String(c.default).replace(/[;]/g, '')}` : '';
-        return `${name} ${dtype} ${def} ${nullable} ${pk}`.trim();
-      });
-      return {
-        ddl: `CREATE TABLE IF NOT EXISTS ${schema}.${table} (\n  ${parts.join(',\n  ')}\n)`,
-        targetSchema: schema, targetTable: table, changeType: type,
-      };
-    }
-    case 'create_index': {
-      const idxName = ident(change?.index_name);
-      const cols: string[] = (Array.isArray(change?.columns) ? change.columns : []).map(ident);
-      if (cols.length === 0) throw new Error('no_columns');
-      const unique = change?.unique ? 'UNIQUE' : '';
-      return {
-        ddl: `CREATE ${unique} INDEX IF NOT EXISTS ${idxName} ON ${schema}.${table} (${cols.join(', ')})`.trim(),
-        targetSchema: schema, targetTable: table, changeType: type,
-      };
-    }
-    default:
-      throw new Error(`unsupported change type: ${type}`);
-  }
-}
 
 /** Dry-run: generate the DDL + its sha256 without executing. */
 router.post('/plan', authenticate, requirePermission('platform.schema.manage'), asyncHandler(async (req: Request, res: Response) => {

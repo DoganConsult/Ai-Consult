@@ -175,6 +175,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/approvals/approvals.component').then(m => m.ApprovalsComponent),
       },
       {
+        path: 'workflow-designer',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.config.write', 'platform.schema.manage'] },
+        loadComponent: () => import('./pages/workflow-designer/workflow-designer.component').then(m => m.WorkflowDesignerComponent),
+      },
+      {
         path: 'erp',
         loadComponent: () => import('./pages/erp/erp-shell.component').then(m => m.ErpShellComponent),
         children: [

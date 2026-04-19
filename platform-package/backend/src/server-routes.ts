@@ -40,6 +40,7 @@ import aiAgentGraphsRoutes from './platform/dos/admin/lowcode/ai-agent-graphs.ro
 import pluginsRoutes from './platform/dos/admin/lowcode/plugins.routes';
 import approvalsRoutes from './platform/dos/admin/lowcode/approvals.routes';
 import schemaDesignerRoutes from './platform/dos/admin/lowcode/schema-designer.routes';
+import workflowsLowcodeRoutes from './platform/dos/admin/lowcode/workflows.routes';
 import openclawRoutes from './platform/openclaw/openclaw.routes';
 import doganConsultRoutes from './products/dogan-consult/dogan-consult.routes';
 import { sbgRoutes } from './products/sbg/sbg.routes';
@@ -199,6 +200,7 @@ export function mountRoutes(app: express.Express): void {
   app.use('/api/platform/admin/plugins', pluginsRoutes);
   app.use('/api/platform/admin/approvals', approvalsRoutes);
   app.use('/api/platform/admin/schema', schemaDesignerRoutes);
+  app.use('/api/platform/admin/workflows', workflowsLowcodeRoutes);
   // Previously orphaned routes (Law 6 fix — no hidden logic):
   app.use('/api/platform/auto-tasks', autoTaskRoutes);
   app.use('/api/platform/contract-tests', contractTestsRoutes);

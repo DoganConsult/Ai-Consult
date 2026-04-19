@@ -5,14 +5,16 @@ import { safeQuery } from '../../../../config/database/database';
 import { requirePermission } from '../require-permission.middleware';
 import { auditAdminAction } from '../audit-action.middleware';
 import { logger } from '../../observability/logger.service';
+import {
+  VALID_METHODS, VALID_HANDLERS, isValidMethod, isValidHandler,
+  isValidEndpointPath, isUnsafeSql, checkRateLimit,
+  type EndpointMethod, type HandlerType,
+} from './lowcode.helpers';
 
 const router: Router = Router();
 
 const SELECT_COLS = `id, code, method, path, description, requires, handler_type, handler_spec,
   input_schema, rate_limit_rpm, status, version, created_at, updated_at`;
-
-const VALID_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'] as const;
-const VALID_HANDLERS = ['sql', 'query_table', 'insert_table', 'update_table', 'delete_table', 'static_json'] as const;
 
 // ──────────────────────────────────────────────────────────────────────────
 // Admin CRUD over dynamic_endpoints (specs).
@@ -26,10 +28,9 @@ router.post('/', authenticate, requirePermission('platform.config.write', 'platf
   const userId = (req as any).user?.userId ?? null;
   const { code, method, path, description, requires, handler_type, handler_spec, input_schema, rate_limit_rpm, status } = req.body || {};
   if (!code || !method || !path || !handler_type) { res.status(400).json({ error: 'code, method, path, handler_type required' }); return; }
-  if (!VALID_METHODS.includes(method)) { res.status(400).json({ error: `method must be one of ${VALID_METHODS.join(',')}` }); return; }
-  if (!VALID_HANDLERS.includes(handler_type)) { res.status(400).json({ error: `handler_type must be one of ${VALID_HANDLERS.join(',')}` }); return; }
-  // Path must start with a slash and only contain safe characters.
-  if (!/^\/[A-Za-z0-9/_\-:.]+$/.test(path)) { res.status(400).json({ error: 'invalid path' }); return; }
+  if (!isValidMethod(method)) { res.status(400).json({ error: `method must be one of ${VALID_METHODS.join(',')}` }); return; }
+  if (!isValidHandler(handler_type)) { res.status(400).json({ error: `handler_type must be one of ${VALID_HANDLERS.join(',')}` }); return; }
+  if (!isValidEndpointPath(path)) { res.status(400).json({ error: 'invalid path' }); return; }
   const r = await safeQuery(
     `INSERT INTO dynamic_endpoints (code, method, path, description, requires, handler_type, handler_spec, input_schema, rate_limit_rpm, status, created_by)
      VALUES ($1,$2,$3,$4,COALESCE($5,'[]')::jsonb,$6,COALESCE($7,'{}')::jsonb,COALESCE($8,'{}')::jsonb,COALESCE($9,60),COALESCE($10,'draft'),$11)
@@ -44,8 +45,8 @@ router.post('/', authenticate, requirePermission('platform.config.write', 'platf
 router.patch('/:code', authenticate, requirePermission('platform.config.write', 'platform.schema.manage'), auditAdminAction('endpoint.update', 'dynamic_endpoint'), asyncHandler(async (req: Request, res: Response) => {
   const code = req.params.code as string;
   const b = req.body || {};
-  if (b.method && !VALID_METHODS.includes(b.method)) { res.status(400).json({ error: 'invalid method' }); return; }
-  if (b.handler_type && !VALID_HANDLERS.includes(b.handler_type)) { res.status(400).json({ error: 'invalid handler_type' }); return; }
+  if (b.method && !isValidMethod(b.method)) { res.status(400).json({ error: 'invalid method' }); return; }
+  if (b.handler_type && !isValidHandler(b.handler_type)) { res.status(400).json({ error: 'invalid handler_type' }); return; }
   const r = await safeQuery(
     `UPDATE dynamic_endpoints SET
         description = COALESCE($2, description),
@@ -85,8 +86,8 @@ router.delete('/:code', authenticate, requirePermission('platform.schema.manage'
 // ──────────────────────────────────────────────────────────────────────────
 interface CompiledEndpoint {
   requires: string[];
-  method: string;
-  handler_type: typeof VALID_HANDLERS[number];
+  method: EndpointMethod;
+  handler_type: HandlerType;
   handler_spec: any;
   rate_limit_rpm: number;
 }
@@ -94,14 +95,7 @@ interface CompiledEndpoint {
 const rateCounters = new Map<string, { count: number; windowStart: number }>();
 
 function rateLimited(key: string, limitPerMin: number): boolean {
-  const now = Date.now();
-  const rec = rateCounters.get(key);
-  if (!rec || now - rec.windowStart > 60_000) {
-    rateCounters.set(key, { count: 1, windowStart: now });
-    return false;
-  }
-  rec.count += 1;
-  return rec.count > limitPerMin;
+  return checkRateLimit(rateCounters, key, limitPerMin, Date.now());
 }
 
 async function loadEndpoint(code: string): Promise<CompiledEndpoint | null> {
@@ -193,7 +187,7 @@ async function executeHandler(ep: CompiledEndpoint, req: Request, res: Response,
         const paramsFromParams: string[] = Array.isArray(ep.handler_spec?.params_from_params) ? ep.handler_spec.params_from_params : [];
         if (!sql) { res.status(500).json({ error: 'no_sql' }); return; }
         // Block dangerous statements.
-        if (/;\s*(DROP|ALTER|TRUNCATE|GRANT|REVOKE|CREATE)\b/i.test(sql)) {
+        if (isUnsafeSql(sql)) {
           res.status(400).json({ error: 'unsafe_sql' }); return;
         }
         const values = [

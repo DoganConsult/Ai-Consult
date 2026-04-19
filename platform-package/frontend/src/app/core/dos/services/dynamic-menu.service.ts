@@ -41,6 +41,7 @@ export class DynamicMenuService {
     { route: '/page-catalog',   icon: 'pi pi-objects-column', label: 'Page Catalog',       requires: ['platform.config.write', 'platform.schema.manage'], section: 'lowcode' },
     { route: '/api-builder',    icon: 'pi pi-code',         label: 'API Builder',          requires: ['platform.config.write', 'platform.schema.manage'], section: 'lowcode' },
     { route: '/module-builder', icon: 'pi pi-hammer',       label: 'Module Builder',       requires: ['platform.config.write', 'platform.schema.manage'], section: 'lowcode' },
+    { route: '/workflow-designer', icon: 'pi pi-share-alt', label: 'Workflow Designer',    requires: ['platform.config.write', 'platform.schema.manage'], section: 'lowcode' },
     { route: '/schema-designer',icon: 'pi pi-table',        label: 'Schema Designer',      requires: ['platform.schema.manage'], section: 'lowcode' },
     { route: '/plugins',        icon: 'pi pi-box',          label: 'Plugins',              requires: ['platform.schema.manage'], section: 'lowcode' },
     { route: '/approvals',      icon: 'pi pi-verified',     label: 'Approvals',            requires: ['platform.audit.read', 'platform.permission.assign'], section: 'governance' },

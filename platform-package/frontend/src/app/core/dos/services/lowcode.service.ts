@@ -118,6 +118,13 @@ export class LowcodeService {
   rejectApproval(id: string, reason?: string): Observable<any> { return this.http.post(`${this.base}/approvals/${id}/reject`, { decision_reason: reason }); }
   cancelApproval(id: string): Observable<any> { return this.http.post(`${this.base}/approvals/${id}/cancel`, {}); }
 
+  // Workflows (low-code)
+  listWorkflows(): Observable<any[]> { return this.http.get<any[]>(`${this.base}/workflows`); }
+  getWorkflow(code: string): Observable<any> { return this.http.get(`${this.base}/workflows/${code}`); }
+  createWorkflow(spec: any): Observable<any> { return this.http.post(`${this.base}/workflows`, spec); }
+  updateWorkflow(code: string, spec: any): Observable<any> { return this.http.patch(`${this.base}/workflows/${code}`, spec); }
+  deleteWorkflow(code: string): Observable<unknown> { return this.http.delete(`${this.base}/workflows/${code}`); }
+
   // Schema designer
   listSchemaTables(schema = 'public'): Observable<any[]> { return this.http.get<any[]>(`${this.base}/schema/tables`, { params: { schema } }); }
   listSchemaColumns(schema: string, table: string): Observable<any[]> { return this.http.get<any[]>(`${this.base}/schema/tables/${schema}/${table}/columns`); }
