@@ -26,6 +26,8 @@ export interface DauthMetrics {
   outboxDead: Gauge;
   httpDuration: Histogram<'pillar' | 'route' | 'status'>;
   healthUp: Gauge<'component'>;
+  riskScore: Gauge<'band'>;
+  riskOpenHigh: Gauge;
 }
 
 let dauthMetrics: DauthMetrics | undefined;
@@ -97,6 +99,17 @@ export function getDauthMetrics(): DauthMetrics {
       name: 'dogan_component_up',
       help: '1 if component is healthy',
       labelNames: ['component'],
+      registers: [reg],
+    }),
+    riskScore: new Gauge({
+      name: 'dogan_platform_risk_score',
+      help: 'Current platform risk score 0-100 by band',
+      labelNames: ['band'],
+      registers: [reg],
+    }),
+    riskOpenHigh: new Gauge({
+      name: 'dogan_platform_risk_open_high_alerts',
+      help: 'Open high+critical security alerts (system tenant)',
       registers: [reg],
     }),
   };
