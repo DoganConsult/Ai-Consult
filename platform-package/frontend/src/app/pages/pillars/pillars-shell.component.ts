@@ -12,6 +12,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
     <dos-page-header title="Platform Operations — NOC + SOC"
                      subtitle="Live operator console across DNOC, DSOC, DAuth and DOS pillars" />
     <nav class="pillar-tabs">
+      <a routerLink="overview" routerLinkActive="active"><i class="pi pi-th-large"></i> Overview</a>
       <a routerLink="dnoc" routerLinkActive="active"><i class="pi pi-wave-pulse"></i> DNOC</a>
       <a routerLink="dsoc" routerLinkActive="active"><i class="pi pi-shield"></i> DSOC</a>
       <a routerLink="dauth" routerLinkActive="active"><i class="pi pi-key"></i> DAuth</a>

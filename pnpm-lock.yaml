@@ -276,6 +276,22 @@ importers:
         specifier: 2.1.8
         version: 2.1.8(@types/node@22.10.2)(sass@1.97.3)
 
+  packages/product-sdk:
+    dependencies:
+      '@dogan/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@dogan/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      fastify:
+        specifier: 5.2.0
+        version: 5.2.0
+    devDependencies:
+      typescript:
+        specifier: 5.6.3
+        version: 5.6.3
+
   packages/telemetry:
     dependencies:
       '@opentelemetry/api':
