@@ -3,6 +3,7 @@ import { authenticate, requirePermission } from '../dauth';
 import { toErrorMessage } from '../../errors/http-error.util';
 import { pool } from '../../config/db/pool';
 import { writeAudit } from './audit.util';
+import { validateOrShip, SecurityAlertListSchema } from './contract.util';
 
 const router = Router();
 
@@ -25,7 +26,9 @@ router.get(
           limit $3`,
         [severity, status, limit],
       );
-      res.json({ alerts: rows, ts: new Date().toISOString() });
+      const payload = { alerts: rows, ts: new Date().toISOString() };
+      if (!validateOrShip(res, SecurityAlertListSchema, payload, 'dsoc.alerts.list')) return;
+      res.json(payload);
     } catch (err) {
       res.status(500).json({ error: toErrorMessage(err) });
     }

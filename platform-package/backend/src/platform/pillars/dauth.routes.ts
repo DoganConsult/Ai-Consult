@@ -3,6 +3,7 @@ import { authenticate, requirePermission } from '../dauth';
 import { toErrorMessage } from '../../errors/http-error.util';
 import { pool } from '../../config/db/pool';
 import { writeAudit } from './audit.util';
+import { validateOrShip, RiskScoreSchema } from './contract.util';
 
 const router = Router();
 
@@ -119,7 +120,9 @@ router.get(
       const r = rows[0] ?? { open_high: 0, last_24h: 0, last_1h: 0 };
       const score = Math.min(100, r.open_high * 15 + Math.floor(r.last_1h / 2) + Math.floor(r.last_24h / 10));
       const band = score >= 70 ? 'critical' : score >= 40 ? 'high' : score >= 20 ? 'medium' : 'low';
-      res.json({ score, band, ...r, ts: new Date().toISOString() });
+      const payload = { score, band, ...r, ts: new Date().toISOString() };
+      if (!validateOrShip(res, RiskScoreSchema, payload, 'dauth.risk.score')) return;
+      res.json(payload);
     } catch (err) {
       res.status(500).json({ error: toErrorMessage(err) });
     }

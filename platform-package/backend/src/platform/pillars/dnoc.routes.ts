@@ -3,6 +3,7 @@ import { authenticate, requirePermission } from '../dauth';
 import { toErrorMessage } from '../../errors/http-error.util';
 import { pool } from '../../config/db/pool';
 import { hmacGuard, writeAudit } from './audit.util';
+import { validateOrShip, DnocHealthSchema } from './contract.util';
 
 const router = Router();
 
@@ -53,13 +54,15 @@ router.get(
       } catch {
         dbOk = false;
       }
-      res.json({
+      const payload = {
         ts: new Date().toISOString(),
         prometheus: up !== null,
         alertmanager: (await amGet('/api/v2/status')) !== null,
         database: { up: dbOk, latencyMs: dbLatency },
         services,
-      });
+      };
+      if (!validateOrShip(res, DnocHealthSchema, payload, 'dnoc.health')) return;
+      res.json(payload);
     } catch (err) {
       res.status(500).json({ error: toErrorMessage(err) });
     }
