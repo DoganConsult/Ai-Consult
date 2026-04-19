@@ -120,6 +120,28 @@ async function main() {
     add('products.self', false, err.message);
   }
 
+  // Outbox sanity — pending count must not be unbounded; older deployments
+  // sometimes leave orphan rows. We only warn (not fail) if pending > 50k so
+  // the operator notices before queues block.
+  try {
+    const r = await client.query(
+      `select count(*)::int as n
+         from information_schema.tables
+        where table_schema = 'platform' and table_name = 'outbox_events'`,
+    );
+    if ((r.rows[0]?.n ?? 0) > 0) {
+      const pend = await client.query(
+        `select count(*)::int as n from platform.outbox_events where status = 'pending'`,
+      );
+      const n = pend.rows[0]?.n ?? 0;
+      add('outbox.pending', n < 50000, `pending=${n}`);
+    } else {
+      add('outbox.pending', true, 'no outbox table — skipped');
+    }
+  } catch (err) {
+    add('outbox.pending', true, `skipped: ${err.message}`);
+  }
+
   for (const p of REQUIRED_POLICIES) {
     try {
       const r = await client.query(

@@ -4,6 +4,13 @@ import { toErrorMessage } from '../../errors/http-error.util';
 import { pool } from '../../config/db/pool';
 import { writeAudit } from './audit.util';
 import { validateOrShip, RiskScoreSchema } from './contract.util';
+import { rateLimiter } from '../dos/http/rate-limiting/rate-limiter';
+
+const dauthMutationLimiter = rateLimiter({
+  namespace: 'dauth-mutation',
+  maxRequests: 60,
+  windowMs: 60_000,
+});
 
 const router = Router();
 
@@ -42,6 +49,7 @@ router.get(
 
 router.post(
   '/sessions/:id/revoke',
+  dauthMutationLimiter,
   authenticate,
   requirePermission('platform.user.invite'),
   async (req: Request, res: Response) => {

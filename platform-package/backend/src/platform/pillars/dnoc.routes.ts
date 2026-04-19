@@ -4,6 +4,13 @@ import { toErrorMessage } from '../../errors/http-error.util';
 import { pool } from '../../config/db/pool';
 import { hmacGuard, writeAudit } from './audit.util';
 import { validateOrShip, DnocHealthSchema } from './contract.util';
+import { rateLimiter } from '../dos/http/rate-limiting/rate-limiter';
+
+const webhookLimiter = rateLimiter({
+  namespace: 'pillars-webhook',
+  maxRequests: 600,
+  windowMs: 60_000,
+});
 
 const router = Router();
 
@@ -93,6 +100,7 @@ router.get(
 
 router.post(
   '/alerts/webhook',
+  webhookLimiter,
   hmacGuard('ALERTMANAGER_WEBHOOK_HMAC_SECRET'),
   async (req: Request, res: Response) => {
     try {
@@ -127,6 +135,7 @@ router.post(
 
 router.post(
   '/alerts/pager',
+  webhookLimiter,
   hmacGuard('ALERTMANAGER_WEBHOOK_HMAC_SECRET'),
   async (req: Request, res: Response) => {
     try {

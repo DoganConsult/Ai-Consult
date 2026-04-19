@@ -28,7 +28,14 @@ function getRawBody(req: Request): string {
 export function hmacGuard(envName: string): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
     const secret = process.env[envName];
-    if (!secret) return next();
+    if (!secret) {
+      // Fail-closed in production — refuse unauthenticated webhook ingress.
+      if (process.env.NODE_ENV === 'production') {
+        res.status(503).json({ error: `webhook secret ${envName} not configured` });
+        return;
+      }
+      return next();
+    }
     const sig = String(req.headers['x-dogan-signature'] ?? '');
     if (!sig) {
       res.status(401).json({ error: 'missing x-dogan-signature' });
@@ -84,7 +91,10 @@ export async function writeAudit(
         JSON.stringify(meta ?? {}),
       ],
     );
-  } catch {
-    /* audit is best-effort; never block the primary mutation */
+  } catch (err) {
+    // Audit is best-effort and must never block the mutation, but enterprise
+    // ops needs the failure visible — write to stderr so pm2/Loki picks it up.
+    // eslint-disable-next-line no-console
+    console.error('[audit] write failed', { action, target, err: (err as Error).message });
   }
 }

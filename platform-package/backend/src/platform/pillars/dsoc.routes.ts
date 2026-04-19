@@ -4,6 +4,13 @@ import { toErrorMessage } from '../../errors/http-error.util';
 import { pool } from '../../config/db/pool';
 import { writeAudit } from './audit.util';
 import { validateOrShip, SecurityAlertListSchema } from './contract.util';
+import { rateLimiter } from '../dos/http/rate-limiting/rate-limiter';
+
+const dsocMutationLimiter = rateLimiter({
+  namespace: 'dsoc-mutation',
+  maxRequests: 120,
+  windowMs: 60_000,
+});
 
 const router = Router();
 
@@ -67,6 +74,7 @@ async function mutateAlert(id: string, newStatus: 'ack' | 'resolved' | 'suppress
 
 router.post(
   '/alerts/:id/ack',
+  dsocMutationLimiter,
   authenticate,
   requirePermission('platform.audit.read'),
   async (req: Request, res: Response) => {
@@ -82,6 +90,7 @@ router.post(
 
 router.post(
   '/alerts/:id/resolve',
+  dsocMutationLimiter,
   authenticate,
   requirePermission('platform.audit.read'),
   async (req: Request, res: Response) => {
@@ -97,6 +106,7 @@ router.post(
 
 router.post(
   '/alerts/:id/suppress',
+  dsocMutationLimiter,
   authenticate,
   requirePermission('platform.audit.read'),
   async (req: Request, res: Response) => {

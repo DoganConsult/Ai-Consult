@@ -64,6 +64,29 @@ function check(spec: Spec, val: unknown, path: string, errs: string[]): void {
   }
 }
 
+async function recordContractDrift(routeLabel: string, errs: string[]): Promise<void> {
+  try {
+    const { pool } = await import('../../config/db/pool');
+    await pool.query(
+      `insert into platform.security_alerts
+         (tenant_id, severity, source, category, title, detail, event_id, status)
+       values
+         (platform.system_tenant_id(),
+          'medium', 'contract-validator', 'contract-drift',
+          $1, $2::jsonb, $3, 'open')
+       on conflict do nothing`,
+      [
+        `Contract drift on ${routeLabel}`,
+        JSON.stringify({ route: routeLabel, errors: errs.slice(0, 20) }),
+        `contract:${routeLabel}`,
+      ],
+    );
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[contract] failed to record drift', { routeLabel, err: (err as Error).message });
+  }
+}
+
 export function validateOrShip(
   res: Response,
   spec: Spec,
@@ -76,6 +99,8 @@ export function validateOrShip(
   const strict = process.env.CONTRACT_STRICT === '1';
   // eslint-disable-next-line no-console
   console.warn(`[contract] ${routeLabel}: ${errs.length} violation(s)`, errs.slice(0, 5));
+  // Record once per route via stable event_id to avoid alert storms.
+  void recordContractDrift(routeLabel, errs);
   if (strict) {
     res.status(500).json({ error: 'contract violation', route: routeLabel, errors: errs });
     return false;

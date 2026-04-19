@@ -65,6 +65,23 @@ check "GET /api/platform/admin/feature-flags"    "$BASE_URL/api/platform/admin/f
 check "GET /api/platform/admin/platform-config"  "$BASE_URL/api/platform/admin/platform-config"   401
 
 echo ""
+echo "── Pillars (NOC + SOC) — auth required ─────"
+check "GET /pillars/dnoc/health"        "$BASE_URL/pillars/dnoc/health"        401
+check "GET /pillars/dsoc/alerts"        "$BASE_URL/pillars/dsoc/alerts"        401
+check "GET /pillars/dauth/risk/score"   "$BASE_URL/pillars/dauth/risk/score"   401
+check "GET /pillars/dos/overview"       "$BASE_URL/pillars/dos/overview"       401
+status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 -X POST \
+  -H 'content-type: application/json' -d '{}' \
+  "$BASE_URL/pillars/dnoc/alerts/webhook" 2>/dev/null || echo "000")
+if [ "$status" = "401" ] || [ "$status" = "503" ]; then
+  echo "  PASS  POST /pillars/dnoc/alerts/webhook (fail-closed=$status)"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL  POST /pillars/dnoc/alerts/webhook (got $status, expected 401 or 503)"
+  FAIL=$((FAIL + 1))
+fi
+
+echo ""
 echo "── Frontend Static Serving ─────────────────"
 check "GET / (frontend SPA)"       "$BASE_URL/"                      200
 
