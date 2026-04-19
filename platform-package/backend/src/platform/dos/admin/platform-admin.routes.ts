@@ -97,6 +97,33 @@ router.post('/role-permissions', authenticate, asyncHandler(async (req: Request,
   res.status(201).json(result.rows[0] || { message: 'already exists' });
 }));
 
+router.get('/user-access/me', authenticate, asyncHandler(async (req: Request, res: Response) => {
+  const userId = (req as any).user?.userId;
+  if (!userId) { res.status(401).json({ error: 'unauthenticated' }); return; }
+  const [profiles, roles, delegations, permissions] = await Promise.all([
+    safeQuery(
+      `SELECT ap.* FROM user_access_profiles uap JOIN access_profiles ap ON ap.id = uap.access_profile_id WHERE uap.user_id = $1`, [userId]).catch(() => ({ rows: [] })),
+    safeQuery(
+      `SELECT fr.*, ura.scope, ura.authority_level FROM user_role_assignments ura JOIN functional_roles fr ON fr.id = ura.functional_role_id WHERE ura.user_id = $1`, [userId]).catch(() => ({ rows: [] })),
+    safeQuery(
+      `SELECT * FROM delegations WHERE delegate_id = $1 AND status = 'active' AND (expires_at IS NULL OR expires_at > NOW())`, [userId]).catch(() => ({ rows: [] })),
+    safeQuery(
+      `SELECT DISTINCT p.code FROM user_role_assignments ura
+       JOIN role_permissions rp ON rp.functional_role_id = ura.functional_role_id
+       JOIN permissions p ON p.id = rp.permission_id
+       WHERE ura.user_id = $1`, [userId]).catch(() => ({ rows: [] })),
+  ]);
+  const isSuperAdmin = profiles.rows.some((p: any) => p.code === 'platform_super_admin');
+  res.json({
+    userId,
+    profiles: profiles.rows,
+    roles: roles.rows,
+    delegations: delegations.rows,
+    permissions: permissions.rows.map((r: any) => r.code),
+    isSuperAdmin,
+  });
+}));
+
 router.get('/user-access/:userId', authenticate, asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
   const [profiles, roles, delegations] = await Promise.all([
