@@ -58,6 +58,16 @@ export async function seedPlatformAdmin(): Promise<void> {
     { code: 'platform.workspace.create', module_code: 'platform', resource: 'workspace', action: 'create', description: 'Create a workspace' },
     { code: 'platform.schema.manage', module_code: 'platform', resource: 'schema', action: 'manage', description: 'Manage schema governance' },
     { code: 'platform.observability.read', module_code: 'platform', resource: 'observability', action: 'read', description: 'Read platform observability data' },
+    // Pillars operator console (NOC + SOC)
+    { code: 'platform.noc.read', module_code: 'observability', resource: 'noc', action: 'read', description: 'Read DNOC dashboards and alerts' },
+    { code: 'platform.noc.operate', module_code: 'observability', resource: 'noc', action: 'operate', description: 'Operate DNOC (silence, runbook ack)' },
+    { code: 'platform.soc.read', module_code: 'audit', resource: 'soc', action: 'read', description: 'Read DSOC alert queue and audit trail' },
+    { code: 'platform.soc.triage', module_code: 'audit', resource: 'soc', action: 'triage', description: 'Ack / suppress DSOC alerts' },
+    { code: 'platform.soc.resolve', module_code: 'audit', resource: 'soc', action: 'resolve', description: 'Resolve DSOC alerts' },
+    { code: 'platform.dauth.operate', module_code: 'dauth', resource: 'dauth_ops', action: 'operate', description: 'Revoke sessions and inspect JIT/SoD' },
+    { code: 'platform.dauth.jit.revoke', module_code: 'dauth', resource: 'jit_elevation', action: 'revoke', description: 'Revoke active JIT elevations' },
+    { code: 'platform.dos.read', module_code: 'platform', resource: 'dos_ops', action: 'read', description: 'Read DOS kernel runtime state' },
+    { code: 'platform.dos.operate', module_code: 'platform', resource: 'dos_ops', action: 'operate', description: 'Operate DOS kernel (modules, products)' },
   ];
 
   for (const p of permissions) {

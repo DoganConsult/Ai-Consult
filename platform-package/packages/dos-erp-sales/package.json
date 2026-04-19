@@ -2,10 +2,33 @@
   "name": "@dos/erp-sales",
   "version": "1.0.0",
   "description": "DOS-AIO ERP Microservice: Sales Module (Leads, Opportunities, Forecasting)",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "private": true,
   "dependencies": {
     "@dos/types": "workspace:*",
-    "@dos/contracts": "workspace:*"
+    "@dos/contracts": "workspace:*",
+    "@dos/platform-core": "workspace:*",
+    "xstate": "^5.0.0"
+  },
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./workflow": {
+      "require": "./dist/workflow.js",
+      "types": "./dist/workflow.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
   }
 }

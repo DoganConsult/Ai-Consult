@@ -80,3 +80,15 @@ All routes are platform-only. No product routes are mounted.
 ## Product Registration
 
 Products register through the platform's product registration contract. See [PRODUCT_REGISTRATION.md](./PRODUCT_REGISTRATION.md).
+
+## Platform Enrichment Roadmap
+
+The services the platform offers to products (the 12 Pillars of Platform-as-a-Service) and the integration-hub connector framework are defined in:
+
+- [PLATFORM-ENRICHMENT-PLAN.md](./PLATFORM-ENRICHMENT-PLAN.md) — umbrella roadmap
+- [PLATFORM-MS-INTEGRATIONS.md](./PLATFORM-MS-INTEGRATIONS.md) — Microsoft (Entra, Graph, Azure) design
+- [PLATFORM-COLLAB-CONNECTORS.md](./PLATFORM-COLLAB-CONNECTORS.md) — Google Workspace, Zoom, LinkedIn
+
+## Single entry point (workspace + landings + color)
+
+For a merged view of **workspace vs DOS**, **capability/gap summary**, **landing positioning**, and **how colors are defined for public landings** (with repo paths), see [UNIFIED-PLATFORM-LANDING-GUIDE.md](./UNIFIED-PLATFORM-LANDING-GUIDE.md).

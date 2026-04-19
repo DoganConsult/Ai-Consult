@@ -25,6 +25,7 @@ const router = Router();
 /** GET /access-contract — full frontend access contract */
 router.get('/', authenticate, asyncHandler(async (req: Request, res: Response) => {
   const user = req.user;
+  if (!user?.userId || !user?.tenantId) { res.status(401).json({ error: 'unauthenticated' }); return; }
   const contract = await buildFrontendAccessContract(user.userId, user.tenantId);
   res.json(contract);
 }));
@@ -32,6 +33,7 @@ router.get('/', authenticate, asyncHandler(async (req: Request, res: Response) =
 /** GET /access-contract/minimal — permissions and modules only */
 router.get('/minimal', authenticate, asyncHandler(async (req: Request, res: Response) => {
   const user = req.user;
+  if (!user?.userId || !user?.tenantId) { res.status(401).json({ error: 'unauthenticated' }); return; }
   const contract = await getMinimalAccessContract(user.userId, user.tenantId);
   res.json(contract);
 }));
@@ -39,6 +41,7 @@ router.get('/minimal', authenticate, asyncHandler(async (req: Request, res: Resp
 /** GET /access-contract/nav — navigation-specific subset */
 router.get('/nav', authenticate, asyncHandler(async (req: Request, res: Response) => {
   const user = req.user;
+  if (!user?.userId || !user?.tenantId) { res.status(401).json({ error: 'unauthenticated' }); return; }
   const contract = await getNavigationContract(user.userId, user.tenantId);
   res.json(contract);
 }));
@@ -46,6 +49,7 @@ router.get('/nav', authenticate, asyncHandler(async (req: Request, res: Response
 /** GET /access-contract/perms — permission-only subset */
 router.get('/perms', authenticate, asyncHandler(async (req: Request, res: Response) => {
   const user = req.user;
+  if (!user?.userId || !user?.tenantId) { res.status(401).json({ error: 'unauthenticated' }); return; }
   const contract = await getPermissionContract(user.userId, user.tenantId);
   res.json(contract);
 }));
@@ -53,6 +57,7 @@ router.get('/perms', authenticate, asyncHandler(async (req: Request, res: Respon
 /** GET /access-contract/version — contract version hash for staleness polling */
 router.get('/version', authenticate, asyncHandler(async (req: Request, res: Response) => {
   const user = req.user;
+  if (!user?.userId || !user?.tenantId) { res.status(401).json({ error: 'unauthenticated' }); return; }
   const version = await getContractVersion(user.userId, user.tenantId);
   res.json(version);
 }));
@@ -62,6 +67,7 @@ router.post('/diff', authenticate, asyncHandler(async (req: Request, res: Respon
   const user = req.user;
   const previous = req.body as FrontendAccessContract;
 
+  if (!user?.userId || !user?.tenantId) { res.status(401).json({ error: 'unauthenticated' }); return; }
   if (!previous || !previous.version) {
     res.status(400).json({ error: 'Request body must contain a valid previous FrontendAccessContract' });
     return;

@@ -118,6 +118,8 @@ export const PRODUCT_ROUTES: Routes = [
 | Settings | DOS | Platform and tenant settings |
 | Lifecycle | DOS | Subscription lifecycle management |
 
+See [PLATFORM-ENRICHMENT-PLAN.md](./PLATFORM-ENRICHMENT-PLAN.md) for the full 12-pillar Platform-as-a-Service surface (Integration Hub, Notifications Router, AI Gateway, Data Platform, Document Generation, Billing, Studio, etc.) available to products.
+
 ## Rules
 
 1. **Product code inside platform core is forbidden** — products register via contracts

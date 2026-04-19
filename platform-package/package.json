@@ -1,7 +1,7 @@
 {
   "name": "dos-platform-package-r15",
   "version": "1.5.0",
-  "description": "DOS Platform Package R1.5 — Standalone Dogan-AI-OS + DAuth platform for independent deployment",
+  "description": "DOS Platform Package R1.5 \u2014 Standalone Dogan-AI-OS + DAuth platform for independent deployment",
   "private": true,
   "scripts": {
     "build": "bash scripts/build.sh",
@@ -20,9 +20,17 @@
     "backup": "bash scripts/backup.sh",
     "restore": "bash scripts/restore.sh",
     "rollback": "bash scripts/rollback.sh",
-    "sbom": "bash scripts/sbom.sh"
+    "sbom": "bash scripts/sbom.sh",
+    "packages:build": "pnpm -r --filter \"./packages/*\" run build",
+    "build:all": "pnpm packages:build && pnpm --filter ./backend run build && pnpm --filter ./frontend run build"
   },
   "devDependencies": {
     "vitest": "^4.0.18"
+  },
+  "pnpm": {
+    "overrides": {
+      "uuid": "^9.0.1",
+      "@types/uuid": "^9.0.8"
+    }
   }
 }

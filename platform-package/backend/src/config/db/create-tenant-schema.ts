@@ -16,6 +16,7 @@ import { createTeamsGovernanceTables } from './schemas/teams-governance';
 import { createAiAgentsTables } from './schemas/ai-agents';
 import { createProvisioningTables } from './schemas/provisioning-onboarding';
 import { createEvidenceConnectorTables } from './schemas/evidence-connectors';
+import { createIntegrationBindingTables } from './schemas/integration-bindings';
 import { createPlatformTables, seedPlatformData } from './schemas/platform-dashboard';
 
 const PROVISIONING_GATE = {
@@ -58,6 +59,9 @@ export async function createTenantSchema(tenantId: string, sectorIds?: string[])
 
   // === Phase 6: Evidence connectors (SIEM, CMDB, IAM, ITSM, M365, Vuln Scanner) ===
   await createEvidenceConnectorTables(schema);
+
+  // === Phase 6.5: Integration Hub bindings (Microsoft, Google, Zoom, LinkedIn, ...) ===
+  await createIntegrationBindingTables(schema);
 
   // === Phase 7: Apply tenant migrations (032-061) ===
   try {

@@ -62,7 +62,7 @@ router.put(
       setAuditData(res, { action: 'update', entityType: 'auto-task', entityId: req.tenantId!, afterState: config });
       swallow(
         EC.EVENT_BUS,
-        emitEvent({ tenantId: req.tenantId!, userId: req.user!.userId, module: 'workflows', event: 'updated', entityType: 'auto_task', entityId: '' }),
+        emitEvent({ tenantId: req.tenantId!, userId: req.user!.userId ?? '', module: 'workflows', event: 'updated', entityType: 'auto_task', entityId: '' }),
         { tenantId: req.tenantId, operation: 'grcEvent:workflows.auto_task.updated' },
       );
       res.json(config);
@@ -100,7 +100,7 @@ router.put(
       setAuditData(res, { action: 'update', entityType: 'auto-task', entityId: taskId, afterState: task });
       swallow(
         EC.EVENT_BUS,
-        emitEvent({ tenantId: req.tenantId!, userId: req.user!.userId, module: 'workflows', event: 'updated', entityType: 'auto_task', entityId: taskId }),
+        emitEvent({ tenantId: req.tenantId!, userId: req.user!.userId ?? '', module: 'workflows', event: 'updated', entityType: 'auto_task', entityId: taskId }),
         { tenantId: req.tenantId, operation: 'grcEvent:workflows.auto_task.updated' },
       );
       res.json(task);
@@ -118,7 +118,7 @@ router.post('/trigger', requirePermission('workflow.task.act'), async (req: Requ
     setAuditData(res, { action: 'create', entityType: 'auto-task', entityId: 'manual-trigger', afterState: result });
     swallow(
       EC.EVENT_BUS,
-      emitEvent({ tenantId: req.tenantId!, userId: req.user!.userId, module: 'workflows', event: 'created', entityType: 'auto_task', entityId: 'manual-trigger' }),
+      emitEvent({ tenantId: req.tenantId!, userId: req.user!.userId ?? '', module: 'workflows', event: 'created', entityType: 'auto_task', entityId: 'manual-trigger' }),
       { tenantId: req.tenantId, operation: 'grcEvent:workflows.auto_task.created' },
     );
     res.json(result);

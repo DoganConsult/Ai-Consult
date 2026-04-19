@@ -2,10 +2,28 @@
   "name": "@dos/erp-finance",
   "version": "1.0.0",
   "description": "DOS-AIO ERP Microservice: Finance Module (Invoicing, Collections, Payments)",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "private": true,
   "dependencies": {
     "@dos/types": "workspace:*",
-    "@dos/contracts": "workspace:*"
+    "@dos/contracts": "workspace:*",
+    "@dos/platform-core": "workspace:*"
+  },
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
   }
 }

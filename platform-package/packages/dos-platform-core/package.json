@@ -1,11 +1,57 @@
 {
   "name": "@dos/platform-core",
   "version": "1.0.0",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "private": true,
   "dependencies": {
     "@dos/types": "workspace:*",
-    "@dos/contracts": "workspace:*"
+    "@dos/contracts": "workspace:*",
+    "uuid": "^9.0.1"
+  },
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./consultations": {
+      "require": "./dist/consultations.js",
+      "types": "./dist/consultations.d.ts"
+    },
+    "./contacts": {
+      "require": "./dist/contacts.js",
+      "types": "./dist/contacts.d.ts"
+    },
+    "./event-bus": {
+      "require": "./dist/event-bus.js",
+      "types": "./dist/event-bus.d.ts"
+    },
+    "./sbg-agents": {
+      "require": "./dist/sbg-agents.js",
+      "types": "./dist/sbg-agents.d.ts"
+    },
+    "./sbg-entities": {
+      "require": "./dist/sbg-entities.js",
+      "types": "./dist/sbg-entities.d.ts"
+    },
+    "./sbg-functions": {
+      "require": "./dist/sbg-functions.js",
+      "types": "./dist/sbg-functions.d.ts"
+    },
+    "./sbg-integrations": {
+      "require": "./dist/sbg-integrations.js",
+      "types": "./dist/sbg-integrations.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/uuid": "^9.0.8",
+    "typescript": "^5.9.2"
   }
 }

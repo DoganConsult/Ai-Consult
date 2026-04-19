@@ -4,6 +4,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/pillars": {
+    "target": "http://localhost:3100",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/ws": {
     "target": "ws://localhost:3010",
     "secure": false,

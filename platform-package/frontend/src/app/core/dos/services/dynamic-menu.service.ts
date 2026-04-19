@@ -47,6 +47,7 @@ export class DynamicMenuService {
     { route: '/approvals',      icon: 'pi pi-verified',     label: 'Approvals',            requires: ['platform.audit.read', 'platform.permission.assign'], section: 'governance' },
 
     { route: '/diagnostics',    icon: 'pi pi-wrench',       label: 'Diagnostics',          requires: ['platform.observability.read'] },
+    { route: '/pillars',        icon: 'pi pi-wave-pulse',   label: 'NOC + SOC Console',    requires: ['platform.observability.read'] },
   ]);
 
   /** All registered items (unfiltered). */

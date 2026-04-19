@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin';
-import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
+import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify';
 import { createDb } from '@dogan/db';
 import { NatsRuntime, DOGAN_EVENTS_STREAM, DOGAN_EVENTS_SUBJECT } from '@dogan/events';
 import { getDauthMetrics, renderMetrics } from '@dogan/telemetry';
@@ -76,6 +76,36 @@ const dnocPlugin: FastifyPluginAsync<DNOCPillarOptions> = async (app: FastifyIns
     await nats.close();
     await db.destroy();
   });
+
+  // Alertmanager webhook ingress. No tenant context (infrastructure-level).
+  // alertmanager.yml receivers post here for default + pager routes.
+  const ingestAlerts = async (req: FastifyRequest, pager: boolean) => {
+    const body = (req.body ?? {}) as { alerts?: Array<Record<string, unknown>> };
+    const alerts = Array.isArray(body.alerts) ? body.alerts : [];
+    if (alerts.length === 0) return { received: 0 };
+    const { sql } = await import('kysely');
+    await db.transaction().execute(async (tx) => {
+      for (const a of alerts) {
+        const labels = ((a as { labels?: Record<string, string> }).labels ?? {}) as Record<string, string>;
+        const annotations = ((a as { annotations?: Record<string, string> }).annotations ?? {}) as Record<string, string>;
+        const severity = labels.severity ?? (pager ? 'critical' : 'info');
+        const alertname = labels.alertname ?? 'infra';
+        const summary = annotations.summary ?? alertname;
+        const fingerprint = (a as { fingerprint?: string }).fingerprint ?? null;
+        const detail = JSON.stringify({ labels, annotations, status: (a as { status?: string }).status, pager });
+        await sql`
+          insert into platform.security_alerts
+            (tenant_id, severity, source, category, title, detail, event_id, status)
+          values (platform.system_tenant_id(),
+                  ${severity}, ${pager ? 'dnoc-pager' : 'dnoc'}, ${alertname},
+                  ${summary}, ${detail}::jsonb, ${fingerprint}, 'open')
+        `.execute(tx);
+      }
+    });
+    return { received: alerts.length, pager };
+  };
+  app.post('/pillars/dnoc/alerts/webhook', async (req) => ingestAlerts(req, false));
+  app.post('/pillars/dnoc/alerts/pager', async (req) => ingestAlerts(req, true));
 
   app.get('/pillars/dnoc/health', async (_req, reply) => {
     const probes = await runProbes();

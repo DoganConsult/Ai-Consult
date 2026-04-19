@@ -1,5 +1,8 @@
 import type { ConsultationModel, ContactModel, TenancyBounds } from '@dos/types';
 
+// Re-export ERP service interfaces so `@dos/contracts` bare import resolves.
+export * from './erp';
+
 // Extraction-ready boundaries mapping to exact bounded operations for remote invokability.
 
 export interface IConsultationService {

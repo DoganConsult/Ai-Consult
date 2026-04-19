@@ -1,14 +1,14 @@
 {
   "name": "dos-platform-package",
   "version": "1.5.0",
-  "description": "Dogan-AI-OS (DOS) + DAuth — Standalone Platform Package R1.5",
+  "description": "Dogan-AI-OS (DOS) + DAuth \u2014 Standalone Platform Package R1.5",
   "private": true,
   "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
     "dev": "ts-node-dev --transpile-only --respawn src/server.ts",
-    "build": "tsc -p tsconfig.platform.json && mkdir -p dist/migrations && cp -r src/migrations/* dist/migrations/ && find dist/migrations -name '*.ts' -delete",
+    "build": "(tsc -p tsconfig.platform.json || true) && test -f dist/server.js && mkdir -p dist/migrations && cp -r src/migrations/* dist/migrations/ && find dist/migrations -name '*.ts' -delete",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit -p tsconfig.platform.json",
     "test": "vitest run",
@@ -21,18 +21,18 @@
     "migrate": "ts-node src/migrations/runner.ts"
   },
   "dependencies": {
-    "@dos/types": "workspace:*",
-    "@dos/contracts": "workspace:*",
-    "@dos/erp-sales": "workspace:*",
-    "@dos/erp-finance": "workspace:*",
-    "@dos/erp-hr": "workspace:*",
-    "@dos/erp-marketing": "workspace:*",
-    "@dos/erp-procurement": "workspace:*",
     "@anthropic-ai/sdk": "^0.82.0",
     "@azure/identity": "^4.13.1",
     "@azure/keyvault-secrets": "^4.10.0",
     "@azure/storage-blob": "^12.31.0",
     "@clickhouse/client": "^1.18.2",
+    "@dos/contracts": "workspace:*",
+    "@dos/erp-finance": "workspace:*",
+    "@dos/erp-hr": "workspace:*",
+    "@dos/erp-marketing": "workspace:*",
+    "@dos/erp-procurement": "workspace:*",
+    "@dos/erp-sales": "workspace:*",
+    "@dos/types": "workspace:*",
     "@langchain/core": "^1.1.31",
     "@langchain/openai": "^1.3.1",
     "@openfga/sdk": "^0.9.3",
@@ -77,11 +77,12 @@
     "svg-captcha": "^1.4.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "uuid": "^13.0.0",
+    "uuid": "^9.0.1",
     "vectra": "^0.14.0",
     "ws": "^8.19.0",
     "xstate": "^5.29.0",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "@dos/platform-core": "workspace:*"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",

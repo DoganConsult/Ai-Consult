@@ -47,3 +47,6 @@ export interface ErpPurchaseOrder {
   status: 'DRAFT' | 'APPROVED' | 'FULFILLED';
   tenantId: string;
 }
+
+// Convenience re-export so `@dos/types/erp` subpath also carries shared tenancy types.
+export type { TenancyBounds } from "./index";

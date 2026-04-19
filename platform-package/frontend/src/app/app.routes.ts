@@ -80,6 +80,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/diagnostics/support-diagnostics.component').then(m => m.SupportDiagnosticsComponent),
       },
       {
+        path: 'pillars',
+        canActivate: [requirePermission],
+        data: { requires: ['platform.observability.read'] },
+        loadChildren: () => import('./pages/pillars/pillars.routes').then(m => m.routes),
+      },
+      {
         path: 'products',
         canActivate: [requirePermission],
         data: { requires: ['platform.product.enable', 'platform.product.disable'] },

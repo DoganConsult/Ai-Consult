@@ -41,11 +41,42 @@ import pluginsRoutes from './platform/dos/admin/lowcode/plugins.routes';
 import approvalsRoutes from './platform/dos/admin/lowcode/approvals.routes';
 import schemaDesignerRoutes from './platform/dos/admin/lowcode/schema-designer.routes';
 import workflowsLowcodeRoutes from './platform/dos/admin/lowcode/workflows.routes';
+import integrationsHubRoutes from './platform/dos/admin/integrations-hub.routes';
+
+// ── Pillars BFF: DNOC / DSOC / DAuth / DOS operator console ──────────────────
+import pillarsRoutes from './platform/pillars';
 import openclawRoutes from './platform/openclaw/openclaw.routes';
-import doganConsultRoutes from './products/dogan-consult/dogan-consult.routes';
-import { sbgRoutes } from './products/sbg/sbg.routes';
-import { erpRoutes } from './products/erp/erp.routes';
-import { portalRoutes } from './products/erp/portals.routes';
+// Product routers are wrapped in optional-load so missing workspace packages
+// (e.g., xstate, @dos/platform-core/event-bus) cannot prevent dos-platform
+// from booting. Pillars, DAuth, DOS and DSOC continue to mount regardless.
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+function __optionalProductRoute(loader: () => any, label: string): any {
+  try { return loader(); } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('[server-routes] skip ' + label + ':', (e as Error)?.message);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Router } = require('express');
+    return { default: Router(), sbgRoutes: Router(), erpRoutes: Router(), portalRoutes: Router() };
+  }
+}
+/* eslint-disable @typescript-eslint/no-require-imports */
+const doganConsultRoutes = __optionalProductRoute(
+  () => require('./products/dogan-consult/dogan-consult.routes').default,
+  'dogan-consult',
+);
+const { sbgRoutes } = __optionalProductRoute(
+  () => require('./products/sbg/sbg.routes'),
+  'sbg',
+);
+const { erpRoutes } = __optionalProductRoute(
+  () => require('./products/erp/erp.routes'),
+  'erp',
+);
+const { portalRoutes } = __optionalProductRoute(
+  () => require('./products/erp/portals.routes'),
+  'portals',
+);
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 // ── DOS: Observability & health ───────────────────────────────────────────────
 import healthRoutes from './platform/dos/http/health/health.routes';
@@ -136,6 +167,10 @@ export function mountRoutes(app: express.Express): void {
 
   // Expose OpenClaw public AI agent routes before auth guards
   app.use('/api/integration/openclaw', openclawRoutes);
+
+  // Pillars webhook ingress (Alertmanager posts directly; no tenant/auth guard).
+  // alertmanager.yml → /pillars/dnoc/alerts/webhook + /pillars/dnoc/alerts/pager
+  app.use('/pillars', pillarsRoutes);
   
   app.use('/api/products/dogan-consult', doganConsultRoutes);
   app.use('/api/products/sbg', sbgRoutes);
@@ -201,6 +236,10 @@ export function mountRoutes(app: express.Express): void {
   app.use('/api/platform/admin/approvals', approvalsRoutes);
   app.use('/api/platform/admin/schema', schemaDesignerRoutes);
   app.use('/api/platform/admin/workflows', workflowsLowcodeRoutes);
+  app.use('/api/platform/admin/integrations', integrationsHubRoutes);
+
+  // Pillars operator console (authenticated): DNOC / DSOC / DAuth / DOS
+  app.use('/api/pillars', pillarsRoutes);
   // Previously orphaned routes (Law 6 fix — no hidden logic):
   app.use('/api/platform/auto-tasks', autoTaskRoutes);
   app.use('/api/platform/contract-tests', contractTestsRoutes);

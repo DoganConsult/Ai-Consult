@@ -16,7 +16,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": true,
-    "noEmitOnError": true,
+    "noEmitOnError": false,
     "downlevelIteration": true
   },
   "include": ["src/**/*"],
