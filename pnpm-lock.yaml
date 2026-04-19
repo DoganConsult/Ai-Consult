@@ -470,12 +470,18 @@ importers:
       '@dogan/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
+      '@sinclair/typebox':
+        specifier: 0.33.22
+        version: 0.33.22
       fastify:
         specifier: 5.2.0
         version: 5.2.0
       fastify-plugin:
         specifier: 5.0.1
         version: 5.0.1
+      kysely:
+        specifier: 0.27.5
+        version: 0.27.5
     devDependencies:
       typescript:
         specifier: 5.6.3

@@ -1,100 +1,63 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
-
-interface KernelReady {
-  ready: boolean;
-  components: Record<string, { ok: boolean; latencyMs?: number; error?: string }>;
-  ts: string;
-}
+import { workspaceStyles } from './workspace.styles';
 
 @Component({
   selector: 'dgn-workspace',
   standalone: true,
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  styles: [workspaceStyles],
   template: `
-    <div class="container">
-      <header style="display:flex;align-items:center;justify-content:space-between;padding:1rem 0;border-bottom:1px solid var(--border)">
-        <div>
-          <strong style="font-size:1.1rem">Dogan AI OS · Operator Workspace</strong>
-          <div class="muted" style="font-size:0.85rem">DAuth-issued session</div>
+    <div class="ws-shell">
+      <aside class="ws-side">
+        <div class="brand">Dogan <small>AI OS</small></div>
+        <div class="pillar-label">Overview</div>
+        <a routerLink="/workspace/overview" routerLinkActive="active">Operator overview</a>
+        <a routerLink="/workspace/readiness" routerLinkActive="active">Readiness &amp; metrics</a>
+        <a routerLink="/workspace/capabilities" routerLinkActive="active">Kernel capabilities</a>
+        <div class="pillar-label">DAuth · Identity</div>
+        <a routerLink="/workspace/tenants" routerLinkActive="active">Tenants</a>
+        <a routerLink="/workspace/users" routerLinkActive="active">Users</a>
+        <a routerLink="/workspace/roles" routerLinkActive="active">Roles &amp; SoD preflight</a>
+        <a routerLink="/workspace/sessions" routerLinkActive="active">Sessions</a>
+        <a routerLink="/workspace/api-keys" routerLinkActive="active">API keys</a>
+        <a routerLink="/workspace/abac" routerLinkActive="active">ABAC policies</a>
+        <a routerLink="/workspace/sod" routerLinkActive="active">SoD rules</a>
+        <div class="pillar-label">DOS · Config Center</div>
+        <a routerLink="/workspace/tier-limits" routerLinkActive="active">Tier limits</a>
+        <a routerLink="/workspace/config-kv" routerLinkActive="active">Config KV</a>
+        <a routerLink="/workspace/feature-flags" routerLinkActive="active">Feature flags</a>
+        <a routerLink="/workspace/inventory" routerLinkActive="active">Inventory</a>
+        <div class="pillar-label">DSOC · Security</div>
+        <a routerLink="/workspace/alerts" routerLinkActive="active">Security alerts</a>
+        <a routerLink="/workspace/audit" routerLinkActive="active">Audit log</a>
+        <a routerLink="/workspace/retention" routerLinkActive="active">Retention sweep</a>
+        <div class="footer">
+          DAuth-issued session<br/>
+          Pillars: DAuth · DOS · DSOC · DNOC
         </div>
-        <div style="display:flex;gap:0.5rem;align-items:center">
-          <span class="muted" style="font-size:0.85rem">{{ session()?.email }}</span>
-          <button class="btn ghost" (click)="logout()">Sign out</button>
+      </aside>
+      <main class="ws-main">
+        <div class="ws-topbar">
+          <div class="who">
+            <strong>{{ session()?.email ?? '(unknown)' }}</strong>
+            <span> · tid </span>
+            <code>{{ session()?.tenantId ?? '(none)' }}</code>
+            <span> · roles </span>
+            <code>{{ (session()?.roles ?? []).join(',') || '(none)' }}</code>
+          </div>
+          <button type="button" (click)="logout()">Sign out</button>
         </div>
-      </header>
-
-      <section style="margin-top:1.5rem;display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
-        <div class="card">
-          <strong>Identity</strong>
-          <div class="muted" style="font-size:0.85rem;margin-top:0.5rem">subject</div>
-          <code style="font-size:0.8rem">{{ session()?.subject }}</code>
-          <div class="muted" style="font-size:0.85rem;margin-top:0.5rem">tenant</div>
-          <code style="font-size:0.8rem">{{ session()?.tenantId ?? '(none)' }}</code>
-          <div class="muted" style="font-size:0.85rem;margin-top:0.5rem">roles</div>
-          <code style="font-size:0.8rem">{{ (session()?.roles ?? []).join(', ') || '(none)' }}</code>
-          <div class="muted" style="font-size:0.85rem;margin-top:0.5rem">products</div>
-          <code style="font-size:0.8rem">{{ (session()?.products ?? []).join(', ') || '(none)' }}</code>
+        <div class="ws-content">
+          <router-outlet />
         </div>
-
-        <div class="card">
-          <strong>Whoami (DAuth)</strong>
-          <pre style="font-size:0.78rem;white-space:pre-wrap;margin-top:0.5rem">{{ whoamiText() }}</pre>
-        </div>
-
-        <div class="card">
-          <strong>Kernel readiness</strong>
-          @if (ready(); as r) {
-            <div class="muted" style="font-size:0.8rem">{{ r.ts }}</div>
-            <ul style="margin:0.5rem 0;padding-left:1rem">
-              @for (c of componentList(r); track c.name) {
-                <li>{{ c.name }} — {{ c.ok ? 'UP' : 'DOWN' }}</li>
-              }
-            </ul>
-          } @else {
-            <span class="muted">loading…</span>
-          }
-        </div>
-      </section>
+      </main>
     </div>
   `,
 })
-export class WorkspaceComponent implements OnInit {
+export class WorkspaceComponent {
   private readonly auth = inject(AuthService);
   readonly session = this.auth.session;
-  readonly whoamiText = signal<string>('loading…');
-  readonly ready = signal<KernelReady | null>(null);
-
-  async ngOnInit(): Promise<void> {
-    await Promise.all([this.loadWhoami(), this.loadReady()]);
-  }
-
-  componentList(r: KernelReady): Array<{ name: string; ok: boolean }> {
-    return Object.entries(r.components).map(([name, v]) => ({ name, ok: v.ok }));
-  }
-
-  private async loadWhoami(): Promise<void> {
-    try {
-      const r = await this.auth.authorizedFetch('/pillars/dauth/whoami');
-      const txt = await r.text();
-      this.whoamiText.set(r.ok ? this.pretty(txt) : 'HTTP ' + r.status + ': ' + txt);
-    } catch (e) {
-      this.whoamiText.set('error: ' + (e as Error).message);
-    }
-  }
-
-  private async loadReady(): Promise<void> {
-    try {
-      const r = await this.auth.authorizedFetch('/kernel/ready');
-      const j = (await r.json()) as KernelReady;
-      this.ready.set(j);
-    } catch {
-      this.ready.set(null);
-    }
-  }
-
-  private pretty(text: string): string {
-    try { return JSON.stringify(JSON.parse(text), null, 2); } catch { return text; }
-  }
-
   logout(): void { void this.auth.logout(); }
 }

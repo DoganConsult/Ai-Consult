@@ -20,6 +20,7 @@ import { sessionRoutes } from './sessions.js';
 import { apiKeyRoutes } from './api-keys.js';
 import { abacRoutes } from './abac-routes.js';
 import { kcEventRoutes } from './kc-events.js';
+import { crudRoutes } from './crud-routes.js';
 import { registerApiKeyAuth } from './api-key-auth.js';
 import { makeRequireAbac, makeRuntimeSodGuard } from './require-abac.js';
 import { makeQuotaPreflight } from './quotas.js';
@@ -196,6 +197,7 @@ const dauthPlugin: FastifyPluginAsync<DAuthPillarOptions> = async (app, opts) =>
   await app.register(apiKeyRoutes(outbox));
   await app.register(abacRoutes);
   await app.register(kcEventRoutes(outbox, opts.config.KEYCLOAK_EVENTS_HMAC_SECRET));
+  await app.register(crudRoutes(outbox));
 
   // ---------- Routes ----------
   app.get('/pillars/dauth/health', async (_req, reply) => {
