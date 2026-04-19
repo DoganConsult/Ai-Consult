@@ -46,7 +46,16 @@ if [ ! -f dist/dos-platform/browser/index.html ]; then
 fi
 echo "  ✓ Frontend compiled to dist/dos-platform/"
 
-echo "[7/7] Verifying deployment package..."
+echo "[7/8] Running Gate 5 preflight (DB + RLS + system tenant + allowlist)..."
+cd "$ROOT_DIR/backend"
+if [ -n "${DATABASE_URL:-}" ]; then
+  node "$SCRIPT_DIR/preflight.mjs" \
+    || { echo "FAIL: preflight failed — refusing to ship"; exit 1; }
+else
+  echo "  SKIP: DATABASE_URL not set in build env; run preflight before deploy"
+fi
+
+echo "[8/8] Verifying deployment package..."
 cd "$ROOT_DIR"
 echo "  Backend:  $(find backend/dist -name '*.js' | wc -l) JS files"
 echo "  Frontend: $(find frontend/dist -name '*.js' -o -name '*.html' -o -name '*.css' | wc -l) static files"

@@ -18,7 +18,8 @@
     "test:empty-product": "vitest run src/tests/empty-product-startup.test.ts",
     "lint": "eslint --config eslint.config.mjs src/ --max-warnings 0",
     "lint:fix": "eslint --config eslint.config.mjs src/ --fix",
-    "migrate": "ts-node src/migrations/runner.ts"
+    "migrate": "ts-node src/migrations/runner.ts",
+    "preflight": "node ../scripts/preflight.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
