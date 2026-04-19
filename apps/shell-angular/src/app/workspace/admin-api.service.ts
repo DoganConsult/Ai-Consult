@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
+import type { DauthStats, DauthPlatformStats, DosStats, DsocStats, DnocStats } from './stats-types';
 
 export interface ApiResult<T> { ok: boolean; status: number; data?: T; error?: string; }
 
@@ -210,6 +211,12 @@ export class AdminApiService {
 
   listProducts() { return this.call<{ products: ProductRow[] }>('/pillars/dos/inventory/products'); }
   listModules() { return this.call<{ modules: ModuleRow[] }>('/pillars/dos/inventory/modules'); }
+
+  dauthStats() { return this.call<DauthStats>('/pillars/dauth/stats'); }
+  dauthPlatformStats() { return this.call<DauthPlatformStats>('/pillars/dauth/platform-stats'); }
+  dosStats()   { return this.call<DosStats>('/pillars/dos/stats'); }
+  dsocStats()  { return this.call<DsocStats>('/pillars/dsoc/stats'); }
+  dnocStats()  { return this.call<DnocStats>('/pillars/dnoc/stats'); }
 
   listAlerts() { return this.call<{ alerts: AlertRow[] }>('/pillars/dsoc/alerts'); }
   ackAlert(b: { alert_id: number; status: 'ack' | 'resolved' | 'suppressed'; }) {

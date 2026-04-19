@@ -8,6 +8,7 @@ import { NatsRuntime, DOGAN_EVENTS_STREAM, DOGAN_EVENTS_SUBJECT } from '@dogan/e
 import { AuditSink } from './audit-sink.js';
 import { AlertConsumer } from './alert-consumer.js';
 import { dsocRoutes } from './routes.js';
+import { dsocStatsRoutes } from './stats.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -76,6 +77,7 @@ const dsocPlugin: FastifyPluginAsync<DSOCPillarOptions> = async (app: FastifyIns
   });
 
   await app.register(dsocRoutes(audit));
+  await app.register(dsocStatsRoutes);
 
   app.get('/pillars/dsoc/health', async () => ({
     pillar: 'DSOC',

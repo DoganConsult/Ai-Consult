@@ -6,6 +6,7 @@ import { getDauthMetrics, renderMetrics } from '@dogan/telemetry';
 import type { KernelConfig } from '@dogan/config';
 import type { Logger } from '@dogan/telemetry';
 import { probePostgres, probeNats, probeHttp, probeTcp, type ProbeResult } from './probes.js';
+import { dnocStatsRoutes } from './stats.js';
 
 export interface DNOCPillarOptions {
   config: KernelConfig;
@@ -89,6 +90,8 @@ const dnocPlugin: FastifyPluginAsync<DNOCPillarOptions> = async (app: FastifyIns
     reply.code(ok ? 200 : 503);
     return { ready: ok, components: probes, ts: new Date().toISOString() };
   });
+
+  await app.register(dnocStatsRoutes(runProbes));
 
   app.get('/metrics', async (_req, reply) => {
     reply.header('content-type', 'text/plain; version=0.0.4');
