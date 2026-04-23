@@ -54,12 +54,12 @@ interface Capability { title: string; desc: string; tag: string; }
       <a href="#stack">Stack</a>
       <span class="spacer"></span>
       <a href="https://api.dogan-ai.com/platform" target="_blank" rel="noopener">Platform banner</a>
-      <button class="login" type="button" (click)="login()" aria-label="Sign in to operator workspace">
+      <a class="login" href="https://admin.dogan-ai.com" aria-label="Sign in to operator workspace">
         <svg class="icon" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
           <path d="M16 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0 14c5.5 0 10 3.6 10 8v2H6v-2c0-4.4 4.5-8 10-8Z"/>
         </svg>
         Sign in
-      </button>
+      </a>
     </header>
 
     <section class="hero">
